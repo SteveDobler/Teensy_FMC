@@ -21,6 +21,8 @@ Programming the LCD
     •	- Button	    Encoder rotate left
     •	S/auto Button	EXEC button
 
+    State = FMC
+    State = LCD
    
 
 */
