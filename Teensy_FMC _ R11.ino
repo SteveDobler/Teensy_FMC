@@ -5,6 +5,27 @@
 */
 
 /*
+
+Programming the LCD 
+
+    Power Button Function   Output - Teensy Pin ___
+    Menu Button FUnction    Output - Teensy Pin ___
+    + Button Function       Output - Teensy Pin ___
+    - Buton Function        Output - Teensy Pin ___
+    S/Auto Button Function  Output - Teensy Pin ___
+
+    •	Power Button	Encoder button press & hold 10 seconds (Powers LCD ON and OFF)
+    •	Power Button	Encoder button press & hold 5 seconds (LCD Mode – Flash all LEDs  ON & OFF)
+    •	Menu Button 	Encoder Button Press
+    •	+ Button	    Encoder rotate right
+    •	- Button	    Encoder rotate left
+    •	S/auto Button	EXEC button
+
+   
+
+*/
+
+/*
 To be used with the EasyEDA 737 FMC CDU Rev 3.3 circuit board
 
 CDU physical layout of keypad
