@@ -6,7 +6,7 @@
 
 /*
 
-Programming the LCD 
+Programming the LCD - This is a new branch
 
     Power Button Function   Output - Teensy Pin ___
     Menu Button FUnction    Output - Teensy Pin ___
@@ -249,18 +249,21 @@ const int EN_ROTA_Pin = 12; // Analog output pin that the LED is attached to
 // Teensy Rotary Encoder Socket Pin Number:       13
 const int EN_SW_Pin = 10;
 
-// Teensy Code DIP Code Select Switch #1  Pin Name: PF2
-// Teensy Backlight Socket Pin Number:              40
+// Teensy Code DIP Code Select Switch #1  Pin Name:     PF2
+// Teensy Code DIP Code Switch #1 Socket  Pin Number:   40
 int CODE_SELECT_SW_1 = 40;
 
-// Teensy Code DIP Code Select Switch #1  Pin Name: PF3
-// Teensy Backlight Socket Pin Number:              41
+// Teensy Code DIP Code Select Switch #1  Pin Name:     PF3
+// Teensy Code DIP Code Switch #2 Socket  Pin Number    41
 int CODE_SELECT_SW_3 = 41;
 
-// Teensy Code DIP Code Select Switch #1  Pin Name: PF4
-// Teensy Backlight Socket Pin Number:              42
+// Teensy Code DIP Code Select Switch #1  Pin Name:     PF4
+// Teensy Code DIP Code Switch #2 Socket  Pin Number    42
 int CODE_SELECT_SW_2 = 42;
 
+// Teensy LCD S/Auto Output Button to LCD Pin Name:     PB6
+// Teensy LCD S/Auto Output Button Socket  Pin Number:  26
+int LCD_S_Auto_Select = 26;
 
 // These variables are used to toggle all the LEDS ON or OFF
 int state = HIGH;      // the current state of the output pin
@@ -316,6 +319,11 @@ void setup()
     pinMode(CODE_SELECT_SW_1, INPUT_PULLUP);
     pinMode(CODE_SELECT_SW_2, INPUT_PULLUP);
     pinMode(CODE_SELECT_SW_3, INPUT_PULLUP);
+
+    // LCD Control Signals
+    pinMode(LCD_S_Auto_Select, OUTPUT);
+    // Set the control signal to OFF (equivalent to Button not being pressed)
+    digitalWrite(LCD_S_Auto_Select, OFF);
 
     // Pins used for the Rotary Encoder pins
     pinMode(EN_ROTA_Pin, INPUT_PULLUP);
@@ -444,9 +452,7 @@ void loop() {
             key = key - 1;  // The KeyName and Aerosoft arrays start at "0"
             Serial.print("AeroSoft Key Value:       ");
             Serial.println(AeroSoft[key]);
-        }
-
-       
+        }     
         
     }
 
@@ -627,6 +633,8 @@ void TOGGLE_LEDS()// For turning LEDs "OFF" and "ON"
     // the time
     if (reading == HIGH && previous == LOW && millis() - time > debounce)
     {
+        LCD_S_Auto_Select = LOW;
+
         if (state == HIGH)
         {
             state = LOW;
@@ -637,7 +645,6 @@ void TOGGLE_LEDS()// For turning LEDs "OFF" and "ON"
             digitalWrite(LED_CDU_OFST, !state);
         }
         else
-
         {
             state = HIGH;
             digitalWrite(LED_CDU_MSG, !state);
@@ -650,6 +657,8 @@ void TOGGLE_LEDS()// For turning LEDs "OFF" and "ON"
         time = millis();
     }
     previous = reading;
+    delay(10);
+    LCD_S_Auto_Select = HIGH;
 
 }// end of void TOGGLE_LEDS()
 

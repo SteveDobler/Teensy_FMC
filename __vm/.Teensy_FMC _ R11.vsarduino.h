@@ -16,6 +16,7 @@
 #define __HARDWARE_at90usb1286__
 #define __HARDWARE_AT90USB1286__
 #define __HARDWARE_AT90usb1286__
+#define _VMDEBUG 1
 #define TEENSYDUINO 148
 #define ARDUINO_ARCH_AVR
 #define ARDUINO 10809

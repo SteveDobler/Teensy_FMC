@@ -91,7 +91,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\Teensy_FMC _ R11;$(ProjectDir)..\libraries\Keypad\src;$(ProjectDir)..\..\..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy;$(ProjectDir)..\..\..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy\utils;$(ProjectDir)..\..\..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy\avr;$(ProjectDir)..\..\..\..\..\Program Files (x86)\Arduino\hardware\teensy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ProjectDir)__vm\.Teensy_FMC _ R11.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
-      <PreprocessorDefinitions>__HARDWARE_at90usb1286__;__HARDWARE_AT90USB1286__;__HARDWARE_AT90usb1286__;TEENSYDUINO=148;ARDUINO_ARCH_AVR;ARDUINO=10809;F_CPU=16000000L;USB_SERIAL;LAYOUT_US_ENGLISH;__cplusplus=201103L;_VMICRO_INTELLISENSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__HARDWARE_at90usb1286__;__HARDWARE_AT90USB1286__;__HARDWARE_AT90usb1286__;_VMDEBUG=1;TEENSYDUINO=148;ARDUINO_ARCH_AVR;ARDUINO=10809;F_CPU=16000000L;USB_SERIAL;LAYOUT_US_ENGLISH;__cplusplus=201103L;_VMICRO_INTELLISENSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
