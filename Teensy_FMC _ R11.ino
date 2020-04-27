@@ -1,34 +1,12 @@
 /*
   Name:       Teensy_FMC_R11.ino
-  Created:    4/17/20
+  Created:    4/26/20
   Author:     Steven Dobler
 */
 
 /*
+To be used with the design at this location: https://easyeda.com/SteveDobler/fmc_hispapanel
 
-Programming the LCD - This is a new branch
-
-    Power Button Function   Output - Teensy Pin ___
-    Menu Button FUnction    Output - Teensy Pin ___
-    + Button Function       Output - Teensy Pin ___
-    - Buton Function        Output - Teensy Pin ___
-    S/Auto Button Function  Output - Teensy Pin ___
-
-    •	Power Button	Encoder button press & hold 10 seconds (Powers LCD ON and OFF)
-    •	Power Button	Encoder button press & hold 5 seconds (LCD Mode – Flash all LEDs  ON & OFF)
-    •	Menu Button 	Encoder Button Press
-    •	+ Button	    Encoder rotate right
-    •	- Button	    Encoder rotate left
-    •	S/auto Button	EXEC button
-
-    State = FMC
-    State = LCD
-   
-
-*/
-
-/*
-To be used with the EasyEDA 737 FMC CDU Rev 3.3 circuit board
 
 CDU physical layout of keypad
          _______________________________________________________________________________________
@@ -81,7 +59,7 @@ CDU physical layout of keypad
         |          [SW58]   [SW59]   [SW60]  [SW53]   [SW54]   [SW55]   [SW56]  [SW57]          |
         |_______________________________________________________________________________________|
 
-keypad.h library keypad array layout> These are the array's rows and columns, not the keypad's
+keypad.h library keypad array layou. These are the array's rows and columns, not the keypad's physical layout
 
       { (R,C)...................................(R,C)} R=Row, C=Column
       { (1,1)(1,2)(1,3)(1,4)(1,5)(1,6)(1,7)(1,8)(1,9)}
@@ -94,15 +72,143 @@ keypad.h library keypad array layout> These are the array's rows and columns, no
       { (8,1)(8,2)(8,3)(8,4)(8,5)(8,6)(8,7)(8,8)(8,9)}
 */
 
-#include <Keypad.h>
+/*
+  A Teensy++ 2.0 module is used for this project. The view below is the top of the Teensy ++2.0 module.
+  The numbers inside the dashed box below are the physical module socket pin numbers. The numbers just
+  outsided the dashed box are the Teensy programming reference numbers assigned to the pins
 
-const   byte ROWS = 8;  // The CDU Keypad has 8 ROW Wires
-const   byte COLS = 9;  // The CDU Keypad has 9 COL Wires
-char  CodeIn;
-int   OFF = 1;      // For the 5 FMC LEDs
-int   ON = 0;      // For the 5 FMC LEDs 
+                          ____________________________
+                         |         |  USB  |          |
+                    GND  | 1       |       |       40 | +5V
+            PWM  PB7 27  | 2       |_______|       39 | 26  PB6  PWM
+       PWM INT0  PD0  0  | 3                       38 | 25  PB5  PWM
+       PWM INT1  PD1  1  | 4                       37 | 24  PB4  PWM
+        RX INT2  PD2  2  | 5                       36 | 23  PB3
+        TX INT3  PD3  3  | 6                       35 | 22  PB2
+                 PD4  4  | 7                       34 | 21  PB1
+                 PD5  5  | 8     Teensy++ 2.0      33 | 20  PB0
+       (LED PIN) PD6  6  | 9                       32 | 19  PE7
+                 PD7  7  | 10                      31 | 18  PE6
+                 PE0  8  | 11                      30 | GND
+                 PE1  9  | 12                      29 | AREF
+                 PC0  10 | 13                      28 | 38  PF0  A0
+                 PC1  11 | 14  PA4 32 O  O 28 PA0  27 | 39  PF1  A1
+                 PC2  12 | 15  PA5 33 O  O 28 PA1  26 | 40  PF2  A2
+                 PC3  13 | 16  PA6 34 O  O 28 PA2  25 | 41  PF3  A3
+            PWM  PC4  14 | 17  PA7 35 O  O 28 PA3  24 | 42  PF4  A4
+            PWM  PC5  14 | 18                      23 | 43  PF5  A5
+            PWM  PC6  15 | 19                      22 | 44  PF6  A6
+                 PC7  16 | 20       O  O  O        21 | 45  PF7  A7
+                         | __________________________ |
+                                    +  G  R
+                                    5  N  S
+                                    V  D  T
+*/
 
-int Encoder_Switch_State;
+/*
+
+Programming the LCD - This is a new branch
+
+    Power Button Function   Output - Teensy Pin ___
+    Menu Button FUnction    Output - Teensy Pin ___
+    + Button Function       Output - Teensy Pin ___
+    - Buton Function        Output - Teensy Pin ___
+    S/Auto Button Function  Output - Teensy Pin ___
+
+    •	Power Button	Encoder button press & hold 10 seconds (Powers LCD ON and OFF)
+    •	Power Button	Encoder button press & hold 5 seconds (LCD Mode – Flash all LEDs  ON & OFF)
+    •	Menu Button 	Encoder Button Press
+    •	+ Button	    Encoder rotate right
+    •	- Button	    Encoder rotate left
+    •	S/auto Button	EXEC button
+
+    State = FMC
+    State = LCD
+   
+
+*/
+
+//--------- [Functions Descriptions] ----------- [Functions Descriptions] ----------- [Functions Descriptions] -------//
+
+// checkEncoder()   Used to check the rotary encoder to control the backlight tactile button's LED brightness
+    void checkEncoder();    
+
+// ledsOff()        Used to turn off the MSG, EXEC, CALL, FAIL and OFST LEDs 
+    void ledsOff();
+
+// toggleLeds()     Used to blink the MSG, EXEC, CALL, FAIL and OFST LEDs to show the FMC is in LCD control state
+    void toggleLeds();
+
+/* lessThan()       When a < character is present in the string read from the serial it indicates that the next 
+                    character is to be used to turn off a particular LED. After the < character the next character
+                    defines the LED as follows:
+                        M = MSG  LED
+                        E = EXEC LED
+                        C = CALL LED
+                        F = FAIL LED
+                        O = OFST LED
+*/
+    void lessThan();
+    
+/* moreThan()       When a > character is present in the string read from the serial it indicates that the next
+                    character is to be used to turn off a particular LED. After the > character the next character
+                    defines the LED as follows:
+                        M = MSG  LED
+                        E = EXEC LED
+                        C = CALL LED
+                        F = FAIL LED
+                        O = OFST LED
+*/  
+    void moreThan();
+
+//----- [Libraries] ------- [Libraries] ------- [Libraries] ------- [Libraries] -----//
+
+// Library for the keypad matrix
+    #include <Keypad.h>      
+
+/*
+  ButtonEvents - An Arduino library for catching tap, double-tap and press-and-hold events for buttons.
+
+        Written by Edward Wright (fasteddy@thewrightspace.net)
+        Available at https://github.com/fasteddy516/ButtonEvents
+
+        Utilizes the Bounce2 library by Thomas O. Fredericks
+        Available at https://github.com/thomasfredericks/Bounce2
+ */
+    #include <ButtonEvents.h>  // Library for the encoder push button events (tap, double tap and hold)
+
+
+//--- [Variable Assignments] --- [Variable Assignments] --- [Variable Assignments] --- [Variable Assignments] ----//
+
+
+// Variables used to blink the MSG, EXEC, CALL, FAIL and OFST LEDs to show the FMC is in LCD control state
+    const long BLINK_INTERVAL = 200;        // Interval at which to blink LED (milliseconds)
+    unsigned long LEDpreviousMillis = 0;    // Will store last time LED was updated
+    int LED_Toggle = 0;                     // Flag to track when to flash LEDs
+
+// Define the number or rows and columns in the keypad array
+    const   byte ROWS = 8;  // The CDU Keypad has 8 ROW Wires
+    const   byte COLS = 9;  // The CDU Keypad has 9 COL Wires
+
+
+    char  CodeIn;
+    int   OFF = 1;          // For the 5 FMC LEDs
+    int   ON = 0;           // For the 5 FMC LEDs 
+    int Encoder_Switch_State;
+
+    unsigned long previous = LOW;    // the previous reading from the input pin
+
+//------- [Button Instance] -------- [Button Instance] --------- [Button Instance] --------- [Button Instance] --------//
+
+/* Create an instance of the ButtonEvents class for the encoder pushbutton.  The encoder pushbutton
+   is used to control the LCD panel by emulating the phycial pushbuttons that are on the small
+   circuit board that comes with the LCD driver board.  The phycial buttons are: PWR, MENU, +, -, and 
+   S/AUTO.
+*/
+    ButtonEvents encoderButton; 
+
+
+// Using the keypad.h library the FMC switch matrix is populated from 1 to 69 and includes all keypad buttons
 
 byte keys[ROWS][COLS] = {
 
@@ -143,206 +249,214 @@ byte keys[ROWS][COLS] = {
 }; // End of keypad matrix / array
 
 /*
-In the above matrix layout the follwoing items are shown:
-
-  - Switch Number
-    - See keyboard schematic
-  - Key Name
-    - This is the legend engraved on the plastic keycap
-  - Value
-    - The number that will be returned by the keypad.h library when the key is pressed.
-    - This is for the AeroSorft Avionics Software http://www.aerosoft.com.au/aerosoft_australia/home.html
-
 The  designation [ **** ] means there is no key switch in that position, however, 222 (arbitrary number) is placed in the
 matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
-
 */
 
 
-/*
+//--------------- [ Teensy++ 2.0 Pin Assignments ] -------------------------- [ Teensy++ 2.0 Pin Assignments ] ------------//
 
-Looking down at the Teensy ++2.0 module, the SOCKET Pins are numbered as shown below:
-
-                          ____________________________
-                         |         |  USB  |          |
-                    GND  | 1       |       |       40 | +5V
-            PWM  PB7 27  | 2       |_______|       39 | 26  PB6  PWM
-       PWM INT0  PD0  0  | 3                       38 | 25  PB5  PWM
-       PWM INT1  PD1  1  | 4                       37 | 24  PB4  PWM
-        RX INT2  PD2  2  | 5                       36 | 23  PB3
-        TX INT3  PD3  3  | 6                       35 | 22  PB2
-                 PD4  4  | 7                       34 | 21  PB1
-                 PD5  5  | 8     Teensy++ 2.0      33 | 20  PB0
-       (LED PIN) PD6  6  | 9                       32 | 19  PE7
-                 PD7  7  | 10                      31 | 18  PE6
-                 PE0  8  | 11                      30 | GND
-                 PE1  9  | 12                      29 | AREF
-                 PC0  10 | 13                      28 | 38  PF0  A0
-                 PC1  11 | 14  PA4 32 O  O 28 PA0  27 | 39  PF1  A1
-                 PC2  12 | 15  PA5 33 O  O 28 PA1  26 | 40  PF2  A2
-                 PC3  13 | 16  PA6 34 O  O 28 PA2  25 | 41  PF3  A3
-            PWM  PC4  14 | 17  PA7 35 O  O 28 PA3  24 | 42  PF4  A4
-            PWM  PC5  14 | 18                      23 | 43  PF5  A5
-            PWM  PC6  15 | 19                      22 | 44  PF6  A6
-                 PC7  16 | 20       O  O  O        21 | 45  PF7  A7
-                         | __________________________ |
-                                    +  G  R
-                                    5  N  S
-                                    V  D  T
-*/
+//-------- [Keypad ROWS & COL pin Assignments] ------- [Keypad ROWS & COL pin Assignments] ----------//
 
 // Teensy Programming ROW Number:         R1, R2, R3, R4, R5, R6, R7, R8
 // Teensy Programming ROW Pin Names:      D6, B7, D0, D1, D2, D3, D4, D5
 // Teensy Socket ROW Pin Names:           9,  2,  3,  4,  5,  6,  7,  8
-                byte rowPins[ROWS] =    { 6,  27, 0,  1,  2,  3,  4,  5 };
+                byte rowPins[ROWS] =    { 6,  27, 0,  1,  2,  3,  4,  5 };      // Teensy pin programming numbers
 
 // Teensy Programming COL Number:         C1, C2, C3, C4, C5, C6, C7, C8, C9
 // Teensy Programming COL Pin Names:      B4, B3, B2, B0, E7, E6, F0, F1, F5    
 // Teensy Socket COL Number:              37, 36, 35, 33, 32, 31, 28, 27, 23
-                byte colPins[COLS] =    { 24, 23, 22, 20, 19, 18, 38, 39, 43 };
+                byte colPins[COLS] =    { 24, 23, 22, 20, 19, 18, 38, 39, 43 }; // Teensy pin programming numbers
+
 
 // Now that the row pins, column pins, number fo rows and number of columns have been defined, create the array
-Keypad kpd = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+    Keypad kpd = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
-// Assign Constant names and Teensy Pin Numbers for the 5 LEDs on the FMC (EXEC, MSG, DSPY, OFST, FAIL)
+//-------- [LED pin Assignments] ------- [LED pin Assignments] ------- [LED pin Assignments] ----------//
 
 // Teensy MGS LED Programming Pin Name:     PC3
 // Teensy MGS LED Socket Pin Number:        16
-int LED_CDU_MSG = 13;
+    const int LED_CDU_MSG = 13;
 
 // Teensy EXEC LED Programming Pin Name:    PC4
 // Teensy EXEC LED Socket Pin Number:       17
-int LED_CDU_EXEC = 14;
+    const int LED_CDU_EXEC = 14;
 
 // Teensy DSPY LED Programming Pin Name:    PC5
 // Teensy DSPY LED Socket Pin Number:       18   
-int LED_CDU_CALL = 15;
+    const int LED_CDU_CALL = 15;
 
 // Teensy FAIL LED Programming Pin Name:    PC6
 // Teensy FAIL LED Socket Pin Number:       19
-int LED_CDU_FAIL = 16;
+    const int LED_CDU_FAIL = 16;
 
 // Teensy OFST LED Programming Pin Name:    PC7
 // Teensy OFST LED Socket Pin Number:       20
-int LED_CDU_OFST = 17;
-
-// Teensy Backlight Programming Pin Name:   PB6
-// Teensy Backlight Socket Pin Number:       39
-int BACK_LIGHT_PWM = 26;
+    const int LED_CDU_OFST = 17;
 
 
-// Assign Constant names and Teensy Pin Numbers for the EC11E18244A5 Rotary Encoder used to dim the pushbutton LEDs
-// There are 3 pins on the one side of the encoder with names:  ROTA, GND, ROTB
+//-------- [Keypad Dimmer Pin Assignment] -------- [Keypad Dimmer Pin Assignment]------- [Keypad Dimmer Pin Assignment]-------//
 
-// Teensy Rotary Encoder Programming Pin Name:    ROTA
-// Teensy Rotary Encoder Socket Pin Number:       14
-const int EN_ROTB_Pin = 11;  // Analog input pin that the potentiometer is attached to
-
-// Teensy Rotary Encoder Programming Pin Name:    ROTB
-// Teensy Rotary Encoder Socket Pin Number:       15
-const int EN_ROTA_Pin = 12; // Analog output pin that the LED is attached to
-
-// Assign Constant names and Teensy Pin Numbers for the EC11E18244A5 Rotary Encoder's pushbutton switch
-// There are 2 pins on the other side of the encoder with names:  SW, GND
-
-// Teensy Rotary Encoder Programming Pin Name:    SW
-// Teensy Rotary Encoder Socket Pin Number:       13
-const int EN_SW_Pin = 10;
-
-// Teensy Code DIP Code Select Switch #1  Pin Name:     PF2
-// Teensy Code DIP Code Switch #1 Socket  Pin Number:   40
-int CODE_SELECT_SW_1 = 40;
-
-// Teensy Code DIP Code Select Switch #1  Pin Name:     PF3
-// Teensy Code DIP Code Switch #2 Socket  Pin Number    41
-int CODE_SELECT_SW_3 = 41;
-
-// Teensy Code DIP Code Select Switch #1  Pin Name:     PF4
-// Teensy Code DIP Code Switch #2 Socket  Pin Number    42
-int CODE_SELECT_SW_2 = 42;
-
-// Teensy LCD S/Auto Output Button to LCD Pin Name:     PB6
-// Teensy LCD S/Auto Output Button Socket  Pin Number:  26
-int LCD_S_Auto_Select = 26;
-
-// These variables are used to toggle all the LEDS ON or OFF
-int state = HIGH;      // the current state of the output pin
-int reading;           // the current reading from the input pin
-int previous = LOW;    // the previous reading from the input pin
-
-// Used for debouncing the pushbutton switch on the rotary encoder used to toggle all LEDs ON or OFF
-// The follow variables are long's because the time, measured in miliseconds,
-// will quickly become a bigger number than can be stored in an int.
-long time = 0;         // The last time the output pin was toggled
-long debounce = 200;   // The debounce time, increase if the output flickers
-
-// Brightness of the backlighted pushbuttons can range from 0 to 255.  This sets initial brightnes at half 
-int brightness = 50;
-
-int currentStateCLK;
-int previousStateCLK;
-
-String encdir = "";
-
-// These constants won't change. They're used to give names to the pins used:
-const int analogInPin = A0;  // Analog input pin that the potentiometer is attached to
-const int analogOutPin = 44; // Analog output pin that the LED is attached to
-
-int DIP_SW_1 = 1;
-int DIP_SW_2 = 1;
-int DIP_SW_3 = 1;
+    // Teensy Backlight Programming Pin Name:   PB6
+    // Teensy Backlight Socket Pin Number:       39
+        const int BACK_LIGHT_PWM = 26;
 
 
-// ----------------------------- Setup Routine -------------------------------
+//-------- [Encoder Pin Assignment] -------- [Encoder Pin Assignment]------- [Encoder Pin Assignment]-------//
+
+    // Assign Constant names and Teensy Pin Numbers for the EC11E18244A5 Rotary Encoder used to dim the pushbutton LEDs
+    // There are 3 pins on the one side of the encoder with names:  ROTA, GND, ROTB
+    // Teensy Rotary Encoder Programming Pin Name:    ROTA
+    // Teensy Rotary Encoder Socket Pin Number:       14
+        const int EN_ROTB_Pin = 11;  // Analog input pin that the potentiometer is attached to
+
+    // Teensy Rotary Encoder Programming Pin Name:    ROTB
+    // Teensy Rotary Encoder Socket Pin Number:       15
+        const int EN_ROTA_Pin = 12; // Analog output pin that the LED is attached to
+
+    // Assign Constant names and Teensy Pin Numbers for the EC11E18244A5 Rotary Encoder's pushbutton switch
+    // There are 2 pins on the other side of the encoder with names:  SW, GND
+    // Teensy Rotary Encoder Programming Pin Name:    SW
+    // Teensy Rotary Encoder Socket Pin Number:       13
+        const int EN_SW_Pin = 10;
+
+
+//-------- [DIP Switch Pin Assignment] -------- [DIP Switch Pin Assignment]------- [DIP Switch Pin Assignment]-------//
+
+    // Teensy Code DIP Code Select Switch #1  Pin Name:     PF2
+    // Teensy Code DIP Code Switch #1 Socket  Pin Number:   40
+        const int CODE_SELECT_SW_1 = 40;
+
+    // Teensy Code DIP Code Select Switch #1  Pin Name:     PF4
+    // Teensy Code DIP Code Switch #2 Socket  Pin Number    42
+        const int CODE_SELECT_SW_2 = 42;
+
+    // Teensy Code DIP Code Select Switch #1  Pin Name:     PF3
+    // Teensy Code DIP Code Switch #2 Socket  Pin Number    41
+        const int CODE_SELECT_SW_3 = 41;
+
+
+    // Teensy LCD S/Auto Output Button to LCD Pin Name:     PB6
+    // Teensy LCD S/Auto Output Button Socket  Pin Number:  25
+        const int LCD_Menu = 25;
+
+    // These variables are used to toggle all the LEDS ON or OFF
+        int ledState = HIGH;                // the current state of the output pin
+        unsigned long ledReading;           // the current reading from the input pin
+        unsigned long ledPrevious = LOW;    // the previous reading from the input pin
+
+// Brightness of the backlighted pushbuttons can range from 0 to 255. Adjust as desired
+        int brightness = 50;
+
+/* Used for debouncing the pushbutton switch on the rotary encoder
+   The follow variables are long's because the time, measured in miliseconds,
+   will quickly become a bigger number than can be stored in an int.
+*/
+        long ledTime = 0;                  // The last time the output pin was toggled
+        unsigned long debounce = 200;   // The debounce time
+
+// These variables are used to determine if the rotary encoder is turned clockwise or counterclockwise
+        int encoderCurrentStateCLK;
+        int encoderPreviousStateCLK;
+
+// String variable to hold the encoder message clockwise "CW" or counterclockwise "CCW"
+        String encdir = "";
+
+// There are 4 DIP switches used to define various functions
+        int DIP_SW_1 = 1;     // KeyCap Name 
+        int DIP_SW_2 = 1;     // Keypad Number    
+        int DIP_SW_3 = 1;     // Aerosoft FSUIPC Value
+        int DIP_SW_4 = 1;     // Select FMC Pilot or Copilot
+
+
+//----- [Setup] ------- [Setup] ------- [Setup] ------- [Setup] ------- [Setup] ------- [Setup]-----//
 
 void setup()
 {
-
     // Start serial Port 9600 baud rate
-    Serial.begin(9600);
+        Serial.begin(9600);
 
     // Configure the 5 LED pins as Output
-    pinMode(LED_CDU_MSG, OUTPUT);
-    pinMode(LED_CDU_EXEC, OUTPUT);
-    pinMode(LED_CDU_CALL, OUTPUT);
-    pinMode(LED_CDU_FAIL, OUTPUT);
-    pinMode(LED_CDU_OFST, OUTPUT);
+        pinMode(LED_CDU_MSG, OUTPUT);
+        pinMode(LED_CDU_EXEC, OUTPUT);
+        pinMode(LED_CDU_CALL, OUTPUT);
+        pinMode(LED_CDU_FAIL, OUTPUT);
+        pinMode(LED_CDU_OFST, OUTPUT);
 
     // Set the 5 LEDs to a known state (OFF)
-    digitalWrite(LED_CDU_MSG, OFF);
-    digitalWrite(LED_CDU_EXEC, ON); // THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-    digitalWrite(LED_CDU_CALL, OFF);
-    digitalWrite(LED_CDU_FAIL, OFF);
-    digitalWrite(LED_CDU_OFST, OFF);
+        digitalWrite(LED_CDU_MSG, OFF);
+        digitalWrite(LED_CDU_EXEC, ON); // THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
+        digitalWrite(LED_CDU_CALL, OFF);
+        digitalWrite(LED_CDU_FAIL, OFF);
+        digitalWrite(LED_CDU_OFST, OFF);
 
     // Pins used for the 3 DIP switches used to select the code sent to the serial port when keys are pressed
-    pinMode(CODE_SELECT_SW_1, INPUT_PULLUP);
-    pinMode(CODE_SELECT_SW_2, INPUT_PULLUP);
-    pinMode(CODE_SELECT_SW_3, INPUT_PULLUP);
-
-    // LCD Control Signals
-    pinMode(LCD_S_Auto_Select, OUTPUT);
-    // Set the control signal to OFF (equivalent to Button not being pressed)
-    digitalWrite(LCD_S_Auto_Select, OFF);
+        pinMode(CODE_SELECT_SW_1, INPUT_PULLUP);
+        pinMode(CODE_SELECT_SW_2, INPUT_PULLUP);
+        pinMode(CODE_SELECT_SW_3, INPUT_PULLUP);
 
     // Pins used for the Rotary Encoder pins
-    pinMode(EN_ROTA_Pin, INPUT_PULLUP);
-    pinMode(EN_ROTB_Pin, INPUT_PULLUP);
+        pinMode(EN_ROTA_Pin, INPUT_PULLUP);
+        pinMode(EN_ROTB_Pin, INPUT_PULLUP);
 
     // This is the pushbutton switch on the rotary encoder used ot turn all the LEDS ON or OFF
-    pinMode(EN_SW_Pin, INPUT_PULLUP);
+        pinMode(EN_SW_Pin, INPUT_PULLUP);
 
-    // This is the pushbutton switch on the rotary encoder used ot turn all the LEDS ON or OFF
-    pinMode(BACK_LIGHT_PWM, OUTPUT);
+    // This is output pin used to control the brightness of the backlighted keypad pushbuttons
+        pinMode(BACK_LIGHT_PWM, OUTPUT);
 
-    previousStateCLK = digitalRead(EN_ROTA_Pin);
+    encoderPreviousStateCLK = digitalRead(EN_ROTA_Pin);
 
     // Write to the pin that controls the backlight LEDs in each pushbutton
-    analogWrite(BACK_LIGHT_PWM, brightness);
-        
+        analogWrite(BACK_LIGHT_PWM, brightness);
+
+  encoderButton.attach(EN_SW_Pin);        // attach our ButtonEvents instance to the button pin
+
+ // If your button is connected such that pressing it generates a high signal on the pin, you need to
+ // specify that it is "active high"
+    encoderButton.activeHigh();
+
+    // If your button is connected such that pressing it generates a low signal on the pin, you can specify
+    // that it is "active low", or don't bother, since this is the default setting anyway.
+    encoderButton.activeLow();
+
+    // By default, the raw signal on the input pin has a 35ms debounce applied to it.  You can change the
+    // debounce time if necessary.
+    encoderButton.debounceTime(15); //apply 15ms debounce
+
+// The double-tap detection window is set to 150ms by default.  Decreasing this value will result in
+// more responsive single-tap events, but requires really fast tapping to trigger a double-tap event.
+// Increasing this value will allow slower taps to still trigger a double-tap event, but will make
+// single-tap events more laggy, and can cause taps that were meant to be separate to be treated as
+// double-taps.  The necessary timing really depends on your use case, but I have found 150ms to be a
+// reasonable starting point.  If you need to change the double-tap detection window, you can do so
+// as follows:
+
+    encoderButton.doubleTapTime(250); // set double-tap detection window to 250ms
+
+// The hold duration can be increased to require longer holds before an event is triggered, or reduced to
+// have hold events trigger more quickly.
+    encoderButton.holdTime(1000); // require button to be held for 2000ms before triggering a hold event
+
+// initialize the arduino serial port and send a welcome message
+    Serial.begin(9600);
+    Serial.println("LCD Control Mode");
+           
 }
 
-char* AeroSoft[] = {
+/*In the matrix layout the follwoing items are shown :
+
+-Switch Number
+- See keyboard schematic
+- Key Name
+- This is the legend engraved on the plastic keycap
+- Value
+- The number that will be returned by the keypad.h library when the key is pressed.
+- This is for the AeroSorft Avionics Software http ://www.aerosoft.com.au/aerosoft_australia/home.html
+
+*/
+
+String AeroSoft[] = {
 
     /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
                       |         |          |           |         |        |        |        |        |
@@ -379,7 +493,7 @@ char* AeroSoft[] = {
                      "8",     "203",     "210",       "69",     "77",    "85",    "47",    "52",    "222"  // Populate Array Row 8
 };
 
-char* KeyName[] = {
+String KeyName[] = {
 
     /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
                       |         |          |           |         |        |        |        |        |
@@ -416,7 +530,9 @@ char* KeyName[] = {
                   "[RSK-2]", "[CRZ]",  "[N1 LIMIT]", "[ E ]",  "[ M ]", "[ U ]", "[ / ]", "[ 4 ]",  "[  ]"  // Populate Array Row 8
 };
 
-// ----------------------------- Loop Routine -------------------------------
+
+//----- [Loop] ------- [Loop] ------- [Loop] ------- [Loop] ------- [Loop] ------- [Loop]-----//
+
 
 void loop() {
 
@@ -465,26 +581,77 @@ void loop() {
   // The < character signifies that the lua script wants to turn on an LED
         if (CodeIn == '<')
         {
-            LESSTHAN(); //Identifier character it "<" goto LESSTHAN void
+            lessThan(); //Identifier character it "<" goto LESSTHAN void
         }
         // The > character signifies that the lua script wants to turn on an LED                    
         if (CodeIn == '>')
         {
-            MORETHAN(); //Identifier character it ">" goto MORETHAN void
+            moreThan(); //Identifier character it ">" goto MORETHAN void
         }
     } // end of if serial.available()
 
 
-  // Check to see if the rotary encoder switch was pushed
-    TOGGLE_LEDS();
+  // Check for rotary encoder
+    checkEncoder();
+   
 
-    // Check for rotary encoder
-    CHECK_ENCODER();
+    // The update() method returns true if an event or state change occurred.  It serves as a passthru
+  // to the Bounce2 library update() function as well, so it will stll return true if a press/release
+  // is detected but has not triggered a tap/double-tap/hold event
+  // The event() method returns tap, doubleTap, hold or none depending on which event was detected
+  // the last time the update() method was called.  The following code accomplishes the same thing
+  // we did in the 'Basic' example, but I personally prefer this arrangement.    
+
+    if (encoderButton.update() == true)
+    {
+        //-------- [Encoder Button Events] ---------- [Encoder Button Events] ---------- [Encoder Button Events] ----------//
+
+        switch (encoderButton.event())
+        {
+
+            //----- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] -------//
+
+        case (tap):
+        {
+            Serial.println("single tap");
+            break;
+        } // end case (tap)
+
+        //----- [Encoder Button Double Tap] ------- [Encoder Button Double Tap] ------- [Encoder Button Double Tap] -------//
+
+        case (doubleTap):
+        {
+            Serial.println("double tap tap"); 
+            ledsOff();
+            break;
+        } // end case (doubleTap)
+
+    //----- [Encoder Button Hold] ----- [Encoder Button Hold] ------ [Encoder Button Hold] ----- [Encoder Button Hold] -----//
+
+        case (hold):
+        {
+            Serial.println("HOLD event detected");
+            LED_Toggle = 1;
+            break;
+        } // end case (hold)
+
+        default:
+            break;
+
+        } // end switch(myButton.event() 
+
+    } //if (myButton.update()
+
+    if (LED_Toggle == 1)
+    {
+        toggleLeds();
+    }
 
 }// end of void loop
 
 
-// ----------------------------- Subroutine getChar -------------------------------
+ //----- [getChar()] ------- [getChar()] ------- [getChar()] ------- [getChar()]-----//
+
 
 char getChar() //  The serial buffer routine to get a character
 {
@@ -492,6 +659,8 @@ char getChar() //  The serial buffer routine to get a character
     return ((char)Serial.read());
 } // end of getchar routine
 
+
+//----- [lessThan()] ------- [lessThan()] ------- [lessThan()] ------- [lessThan()]-----//
 
 /* ------------------------------ Subroutine LESSTHAN ------------------------------
 
@@ -505,7 +674,7 @@ When the flight simulator wants to control the LEDs via a .lua script it first s
     OFST LED  = Capital Letter O
 */
 
-void LESSTHAN() // For turning LEDs "ON"
+void lessThan() // For turning LEDs "ON"
 {
     char CodeIn = getChar();  // get another character from serial port
 
@@ -552,12 +721,14 @@ void LESSTHAN() // For turning LEDs "ON"
         digitalWrite(LED_CDU_OFST, ON);
 
     }
-    state = HIGH; // Set this HIGH so next time the Rotary Encoder Switch is pressed it will turn all LEDs OFF
+    ledState = HIGH; // Set this HIGH so next time the Rotary Encoder Switch is pressed it will turn all LEDs OFF
 
 }  // end of void LESSTHAN() 
 
 
-/* ------------------------------ Subroutine MORETHAN ------------------------------
+//----- [moreThan()] ------- [moreThan()] ------- [moreThan()] ------- [moreThan()]-----//
+
+/* 
 
 When the flight simulator wants to control the LEDs via a .lua script it first sends
  a greater than (>) character followed by a single character as shown below:
@@ -569,7 +740,7 @@ When the flight simulator wants to control the LEDs via a .lua script it first s
     OFST LED  = Capital Letter O
 */
 
-void MORETHAN()// For turning LEDs "OFF"
+void moreThan()// For turning LEDs "OFF"
 {
 
     char CodeIn = getChar();  // get another character from serial port
@@ -619,61 +790,54 @@ void MORETHAN()// For turning LEDs "OFF"
         digitalWrite(LED_CDU_OFST, OFF);
 
     }
-    state = LOW; // Set this LOW so next time the Rotary Encoder Switch is pressed it will turn all LEDs ON
+    ledState = LOW; // Set this LOW so next time the Rotary Encoder Switch is pressed it will turn all LEDs ON
 
 }  // end of void MORETHAN()
 
 
-void TOGGLE_LEDS()// For turning LEDs "OFF" and "ON"
+//----- [toggleLeds()] ------- [toggleLeds()] ------- [toggleLeds()] ------- [toggleLeds()]-----//
 
+
+void toggleLeds()// For turning LEDs "OFF" and "ON"
 {
-    reading = digitalRead(EN_SW_Pin);
-    // if the input just went from LOW and HIGH and we've waited long enough
-    // to ignore any noise on the circuit, toggle the output pin and remember
-    // the time
-    if (reading == HIGH && previous == LOW && millis() - time > debounce)
-    {
-        LCD_S_Auto_Select = LOW;
-
-        if (state == HIGH)
-        {
-            state = LOW;
-            digitalWrite(LED_CDU_MSG, !state);
-            digitalWrite(LED_CDU_EXEC, state);// THIS GOES THROUGH A TRANSISTOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-            digitalWrite(LED_CDU_CALL, !state);
-            digitalWrite(LED_CDU_FAIL, !state);
-            digitalWrite(LED_CDU_OFST, !state);
-        }
+      if (ledState == HIGH && ledPrevious == LOW && millis() - ledTime > debounce)     
+            {
+                ledState = LOW;
+                digitalWrite(LED_CDU_MSG,  !ledState);
+                digitalWrite(LED_CDU_EXEC, ledState);// THIS GOES THROUGH A TRANSISTOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
+                digitalWrite(LED_CDU_CALL, !ledState);
+                digitalWrite(LED_CDU_FAIL, !ledState);
+                digitalWrite(LED_CDU_OFST, !ledState);    
+            }
         else
-        {
-            state = HIGH;
-            digitalWrite(LED_CDU_MSG, !state);
-            digitalWrite(LED_CDU_EXEC, state);// THIS GOES THROUGH A TRANSISTOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-            digitalWrite(LED_CDU_CALL, !state);
-            digitalWrite(LED_CDU_FAIL, !state);
-            digitalWrite(LED_CDU_OFST, !state);
-        }
+            {
+                ledState = HIGH;
+                digitalWrite(LED_CDU_MSG,  !ledState);
+                digitalWrite(LED_CDU_EXEC, ledState);// THIS GOES THROUGH A TRANSISTOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
+                digitalWrite(LED_CDU_CALL, !ledState);
+                digitalWrite(LED_CDU_FAIL, !ledState);
+                digitalWrite(LED_CDU_OFST, !ledState);           
+            }
 
-        time = millis();
-    }
-    previous = reading;
-    delay(10);
-    LCD_S_Auto_Select = HIGH;
+        ledTime = millis();   
 
-}// end of void TOGGLE_LEDS()
+        previous = !previous;
+        ledPrevious = !ledPrevious;
+
+}  // end of void TOGGLE_LEDS()
 
 
-void CHECK_ENCODER()
+void checkEncoder()
 {
     // Read the current state of inputCLK
-    currentStateCLK = digitalRead(EN_ROTA_Pin);
+    encoderCurrentStateCLK = digitalRead(EN_ROTA_Pin);
 
     // If the previous and the current state of the inputCLK are different then a pulse has occured
-    if (currentStateCLK != previousStateCLK) {
+    if (encoderCurrentStateCLK != encoderPreviousStateCLK) {
 
         // If the inputDT state is different than the inputCLK state then 
         // the encoder is rotating counterclockwise
-        if (digitalRead(EN_ROTB_Pin) != currentStateCLK) {
+        if (digitalRead(EN_ROTB_Pin) != encoderCurrentStateCLK) {
 
             brightness = brightness - 10;
             if (brightness < 0)
@@ -705,5 +869,20 @@ void CHECK_ENCODER()
 
     }
     // Update previousStateCLK with the current state
-    previousStateCLK = currentStateCLK;
+    encoderPreviousStateCLK = encoderCurrentStateCLK;
+}
+
+
+//----- [LEDS_OFF()] ------- [LEDS_OFF()] ------- [LEDS_OFF()] ------- [LEDS_OFF()] -----//
+
+void ledsOff()
+{
+    ledState = 0;
+    LED_Toggle = 0;
+
+    digitalWrite(LED_CDU_MSG, 1);
+    digitalWrite(LED_CDU_EXEC, 0);        // EXEC LED via transistor
+    digitalWrite(LED_CDU_CALL, 1);
+    digitalWrite(LED_CDU_FAIL, 1);
+    digitalWrite(LED_CDU_OFST, 1);
 }
