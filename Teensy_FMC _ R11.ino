@@ -38,13 +38,13 @@ CDU physical layout of keypad
         |          [   SW13  ]  [  SW14   ]  [  SW15 ]  [  SW16 ]  [  SW17 ]     LED            |
         |                                                                        (1)            |
         |          [  MENU   ]  [  LEGS   ]  [DEP ARR]  [  HOLD ]  [  PROG ]   [ EXEC ]         |
-        |          [   SW18  ]  [  SW19   ]  [  SW20 ]  [  SW21 ]  [  SW22 ]   [ SW23 ]         |
+        |          [  SW18  ]   [  SW19   ]  [  SW20 ]  [  SW21 ]  [  SW22 ]   [ SW23 ]         |
         |                                                                                       |
         |          [N1  LIMIT]  [   FIX   ]  [ A  ]   [ B  ]   [ C  ]   [ D  ]  [ E  ]          |
         |          [   SW24  ]  [  SW25   ]  [SW28]   [SW29]   [SW30]   [SW31]  [SW32]          |
         |                                                                                       |
         |          [PREV PAGE]  [NEXT PAGE]  [ F  ]   [ G  ]   [ H  ]   [ I  ]  [ J  ]          |
-        |     |C|  [   SW26  ]  [  SW27   ]  [SW33]   [SW34]   [SW35]   [SW36]  [SW37]          |
+        |     |C|  [  SW26  ]   [  SW27   ]  [SW33]   [SW34]   [SW35]   [SW36]  [SW37]          |
         | LED |A|                                                                       |M| LED |
         | (3) |L|  [ 1  ]   [ 2  ]   [ 3  ]  [ K  ]   [ L  ]   [ M  ]   [ N  ]  [ O  ]  |S| (5) |
         |     |L|  [SW67]   [SW68]   [SW69]  [SW38]   [SW39]   [SW40]   [SW41]  [SW42]  |G|     |
@@ -122,13 +122,12 @@ Programming the LCD - This is a new branch
     •	- Button	    Encoder rotate left
     •	S/auto Button	EXEC button
 
-    State = FMC
-    State = LCD
-   
 
 */
 
 //--------- [Functions Descriptions] ----------- [Functions Descriptions] ----------- [Functions Descriptions] -------//
+
+void LCDMode();
 
 // checkEncoder()   Used to check the rotary encoder to control the backlight tactile button's LED brightness
     void checkEncoder();    
@@ -136,8 +135,6 @@ Programming the LCD - This is a new branch
 // ledsOff()        Used to turn off the MSG, EXEC, CALL, FAIL and OFST LEDs 
     void ledsOff();
 
-// toggleLeds()     Used to blink the MSG, EXEC, CALL, FAIL and OFST LEDs to show the FMC is in LCD control state
-    void toggleLeds();
 
 /* lessThan()       When a < character is present in the string read from the serial it indicates that the next 
                     character is to be used to turn off a particular LED. After the < character the next character
@@ -164,7 +161,21 @@ Programming the LCD - This is a new branch
 //----- [Libraries] ------- [Libraries] ------- [Libraries] ------- [Libraries] -----//
 
 // Library for the keypad matrix
-    #include <Keypad.h>      
+    #include <Keypad.h>  // used for the FMC keypad matrix
+  
+    #include "Countimer.h"  // timer library used for the LCD timeout
+
+    Countimer lcdTimer;  // Instance of timer used for LCD timeout
+
+// NoDelay Library https://github.com/M-tech-Creations/NoDelay
+// used for detecting encoder push button, tap, double tap and hold events
+    #include <NoDelay.h>
+
+    void ledBlink();//Must declare function before noDelay 
+
+    noDelay LEDtime(200, ledBlink);//Creats a noDelay varible set to 1000ms, will call ledBlink function
+    int ledState = LOW;
+      
 
 /*
   ButtonEvents - An Arduino library for catching tap, double-tap and press-and-hold events for buttons.
@@ -182,10 +193,11 @@ Programming the LCD - This is a new branch
 
 
 // Variables used to blink the MSG, EXEC, CALL, FAIL and OFST LEDs to show the FMC is in LCD control state
-    const long BLINK_INTERVAL = 200;        // Interval at which to blink LED (milliseconds)
+    long BLINK_INTERVAL = 200;        // Interval at which to blink LED (milliseconds)
     unsigned long LEDpreviousMillis = 0;    // Will store last time LED was updated
-    int LED_Toggle = 0;                     // Flag to track when to flash LEDs
-
+    unsigned long LEDCurrentMillis = 0;
+    int ledFlag = 0;
+   
 // Define the number or rows and columns in the keypad array
     const   byte ROWS = 8;  // The CDU Keypad has 8 ROW Wires
     const   byte COLS = 9;  // The CDU Keypad has 9 COL Wires
@@ -196,8 +208,6 @@ Programming the LCD - This is a new branch
     int   ON = 0;           // For the 5 FMC LEDs 
     int Encoder_Switch_State;
 
-    unsigned long previous = LOW;    // the previous reading from the input pin
-
 //------- [Button Instance] -------- [Button Instance] --------- [Button Instance] --------- [Button Instance] --------//
 
 /* Create an instance of the ButtonEvents class for the encoder pushbutton.  The encoder pushbutton
@@ -205,7 +215,7 @@ Programming the LCD - This is a new branch
    circuit board that comes with the LCD driver board.  The phycial buttons are: PWR, MENU, +, -, and 
    S/AUTO.
 */
-    ButtonEvents encoderButton; 
+    ButtonEvents encoderButton;    
 
 
 // Using the keypad.h library the FMC switch matrix is populated from 1 to 69 and includes all keypad buttons
@@ -248,8 +258,7 @@ byte keys[ROWS][COLS] = {
 
 }; // End of keypad matrix / array
 
-/*
-The  designation [ **** ] means there is no key switch in that position, however, 222 (arbitrary number) is placed in the
+/* The  designation [ **** ] means there is no key switch in that position, however, 222 (arbitrary number) is placed in the
 matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
 */
 
@@ -301,7 +310,6 @@ matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
     // Teensy Backlight Socket Pin Number:       39
         const int BACK_LIGHT_PWM = 26;
 
-
 //-------- [Encoder Pin Assignment] -------- [Encoder Pin Assignment]------- [Encoder Pin Assignment]-------//
 
     // Assign Constant names and Teensy Pin Numbers for the EC11E18244A5 Rotary Encoder used to dim the pushbutton LEDs
@@ -335,25 +343,12 @@ matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
     // Teensy Code DIP Code Switch #2 Socket  Pin Number    41
         const int CODE_SELECT_SW_3 = 41;
 
-
     // Teensy LCD S/Auto Output Button to LCD Pin Name:     PB6
     // Teensy LCD S/Auto Output Button Socket  Pin Number:  25
         const int LCD_Menu = 25;
-
-    // These variables are used to toggle all the LEDS ON or OFF
-        int ledState = HIGH;                // the current state of the output pin
-        unsigned long ledReading;           // the current reading from the input pin
-        unsigned long ledPrevious = LOW;    // the previous reading from the input pin
-
+            
 // Brightness of the backlighted pushbuttons can range from 0 to 255. Adjust as desired
         int brightness = 50;
-
-/* Used for debouncing the pushbutton switch on the rotary encoder
-   The follow variables are long's because the time, measured in miliseconds,
-   will quickly become a bigger number than can be stored in an int.
-*/
-        long ledTime = 0;                  // The last time the output pin was toggled
-        unsigned long debounce = 200;   // The debounce time
 
 // These variables are used to determine if the rotary encoder is turned clockwise or counterclockwise
         int encoderCurrentStateCLK;
@@ -369,7 +364,7 @@ matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
         int DIP_SW_4 = 1;     // Select FMC Pilot or Copilot
 
 
-//----- [Setup] ------- [Setup] ------- [Setup] ------- [Setup] ------- [Setup] ------- [Setup]-----//
+//----- [setup] ------- [setup] ------- [setup] ------- [setup] ------- [setup] ------- [setup]-----//
 
 void setup()
 {
@@ -404,55 +399,61 @@ void setup()
 
     // This is output pin used to control the brightness of the backlighted keypad pushbuttons
         pinMode(BACK_LIGHT_PWM, OUTPUT);
-
-    encoderPreviousStateCLK = digitalRead(EN_ROTA_Pin);
+    
+    // Read the value of the rotary encoder used late in the checkEncoder()
+        encoderPreviousStateCLK = digitalRead(EN_ROTA_Pin);
 
     // Write to the pin that controls the backlight LEDs in each pushbutton
         analogWrite(BACK_LIGHT_PWM, brightness);
 
-  encoderButton.attach(EN_SW_Pin);        // attach our ButtonEvents instance to the button pin
+    // attach our ButtonEvents instance to the button pin
+        encoderButton.attach(EN_SW_Pin);        
 
- // If your button is connected such that pressing it generates a high signal on the pin, you need to
- // specify that it is "active high"
-    encoderButton.activeHigh();
+    // If your button is connected such that pressing it generates a high signal on the pin, you need to
+    // specify that it is "active high"
+        encoderButton.activeHigh();
 
     // If your button is connected such that pressing it generates a low signal on the pin, you can specify
     // that it is "active low", or don't bother, since this is the default setting anyway.
-    encoderButton.activeLow();
+        encoderButton.activeLow();
 
     // By default, the raw signal on the input pin has a 35ms debounce applied to it.  You can change the
     // debounce time if necessary.
-    encoderButton.debounceTime(15); //apply 15ms debounce
+        encoderButton.debounceTime(15); //apply 15ms debounce
 
-// The double-tap detection window is set to 150ms by default.  Decreasing this value will result in
-// more responsive single-tap events, but requires really fast tapping to trigger a double-tap event.
-// Increasing this value will allow slower taps to still trigger a double-tap event, but will make
-// single-tap events more laggy, and can cause taps that were meant to be separate to be treated as
-// double-taps.  The necessary timing really depends on your use case, but I have found 150ms to be a
-// reasonable starting point.  If you need to change the double-tap detection window, you can do so
-// as follows:
+    // The double-tap detection window is set to 150ms by default.  Decreasing this value will result in
+    // more responsive single-tap events, but requires really fast tapping to trigger a double-tap event.
+    // Increasing this value will allow slower taps to still trigger a double-tap event, but will make
+    // single-tap events more laggy, and can cause taps that were meant to be separate to be treated as
+    // double-taps.  The necessary timing really depends on your use case, but I have found 150ms to be a
+    // reasonable starting point.  If you need to change the double-tap detection window, you can do so
+    // as follows:
 
-    encoderButton.doubleTapTime(250); // set double-tap detection window to 250ms
+        encoderButton.doubleTapTime(250); // set double-tap detection window to 250ms
 
-// The hold duration can be increased to require longer holds before an event is triggered, or reduced to
-// have hold events trigger more quickly.
-    encoderButton.holdTime(1000); // require button to be held for 2000ms before triggering a hold event
+    // The hold duration can be increased to require longer holds before an event is triggered, or reduced to
+    // have hold events trigger more quickly.
+        encoderButton.holdTime(1000); // require button to be held for 2000ms before triggering a hold event
 
-// initialize the arduino serial port and send a welcome message
-    Serial.begin(9600);
-    Serial.println("LCD Control Mode");
-           
-}
+    // initialize the arduino serial port and send a welcome message
+        Serial.begin(9600);
+        
+       
+        lcdTimer.setCounter(0, 0, 10, lcdTimer.COUNT_DOWN, lcdModeTimeOut);
+       
+   
+
+} // end of setup()
 
 /*In the matrix layout the follwoing items are shown :
 
 -Switch Number
-- See keyboard schematic
+    - See keyboard schematic
 - Key Name
-- This is the legend engraved on the plastic keycap
+    - This is the legend engraved on the plastic keycap
 - Value
-- The number that will be returned by the keypad.h library when the key is pressed.
-- This is for the AeroSorft Avionics Software http ://www.aerosoft.com.au/aerosoft_australia/home.html
+    - The number that will be returned by the keypad.h library when the key is pressed.
+    - This is for the AeroSorft Avionics Software http ://www.aerosoft.com.au/aerosoft_australia/home.html
 
 */
 
@@ -533,13 +534,33 @@ String KeyName[] = {
 
 //----- [Loop] ------- [Loop] ------- [Loop] ------- [Loop] ------- [Loop] ------- [Loop]-----//
 
-
 void loop() {
+    // When the encoder pushbutton is held for 3 seconds it sets the ledFlag = 1
+         if (ledFlag == 1)
+            {
+                LEDtime.fupdate();  //will check if set time has past and if so will run set function
+            }
 
-    // Read Code DIP Switches
-    DIP_SW_1 = digitalRead(CODE_SELECT_SW_1);
-    DIP_SW_2 = digitalRead(CODE_SELECT_SW_2);
-    DIP_SW_3 = digitalRead(CODE_SELECT_SW_3);
+
+    // Read Code DIP Switches that are used to control various functions on the FMC
+    /*     
+            
+            DIP_SW_1
+                ON  = AeroSoft FMC
+                OFF = Debug Mode - Outputs all information for all configurations on serial monitor
+            
+            DIP_SW_2
+                ON  = PMDG FMC - Pilot
+                OFF = PMDG FMC - CoPilot
+
+            DIP_SW_3
+                ON  = ProSIM FMC - Pilot
+                OFF = ProSIM FMC - Copilot
+    
+    */
+        DIP_SW_1 = digitalRead(CODE_SELECT_SW_1);
+        DIP_SW_2 = digitalRead(CODE_SELECT_SW_2);
+        DIP_SW_3 = digitalRead(CODE_SELECT_SW_3);
 
     // Check the keypad for button pressed
 
@@ -568,8 +589,7 @@ void loop() {
             key = key - 1;  // The KeyName and Aerosoft arrays start at "0"
             Serial.print("AeroSoft Key Value:       ");
             Serial.println(AeroSoft[key]);
-        }     
-        
+        }           
     }
 
     // Start getting characters from the FSX lua script
@@ -592,10 +612,9 @@ void loop() {
 
 
   // Check for rotary encoder
-    checkEncoder();
-   
+        checkEncoder();
 
-    // The update() method returns true if an event or state change occurred.  It serves as a passthru
+  // The update() method returns true if an event or state change occurred.  It serves as a passthru
   // to the Bounce2 library update() function as well, so it will stll return true if a press/release
   // is detected but has not triggered a tap/double-tap/hold event
   // The event() method returns tap, doubleTap, hold or none depending on which event was detected
@@ -609,11 +628,12 @@ void loop() {
         switch (encoderButton.event())
         {
 
-            //----- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] -------//
+        //----- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] -------//
 
         case (tap):
         {
             Serial.println("single tap");
+            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
             break;
         } // end case (tap)
 
@@ -622,7 +642,7 @@ void loop() {
         case (doubleTap):
         {
             Serial.println("double tap tap"); 
-            ledsOff();
+            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
             break;
         } // end case (doubleTap)
 
@@ -631,7 +651,10 @@ void loop() {
         case (hold):
         {
             Serial.println("HOLD event detected");
-            LED_Toggle = 1;
+            ledFlag = 1;
+            Serial.println("Make the LEDs FLASH");
+            lcdTimer.start();
+            Serial.println("LCD TimeOut Timer Started");
             break;
         } // end case (hold)
 
@@ -642,10 +665,7 @@ void loop() {
 
     } //if (myButton.update()
 
-    if (LED_Toggle == 1)
-    {
-        toggleLeds();
-    }
+    lcdTimer.run();
 
 }// end of void loop
 
@@ -740,6 +760,7 @@ When the flight simulator wants to control the LEDs via a .lua script it first s
     OFST LED  = Capital Letter O
 */
 
+
 void moreThan()// For turning LEDs "OFF"
 {
 
@@ -794,46 +815,16 @@ void moreThan()// For turning LEDs "OFF"
 
 }  // end of void MORETHAN()
 
-
-//----- [toggleLeds()] ------- [toggleLeds()] ------- [toggleLeds()] ------- [toggleLeds()]-----//
-
-
-void toggleLeds()// For turning LEDs "OFF" and "ON"
-{
-      if (ledState == HIGH && ledPrevious == LOW && millis() - ledTime > debounce)     
-            {
-                ledState = LOW;
-                digitalWrite(LED_CDU_MSG,  !ledState);
-                digitalWrite(LED_CDU_EXEC, ledState);// THIS GOES THROUGH A TRANSISTOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-                digitalWrite(LED_CDU_CALL, !ledState);
-                digitalWrite(LED_CDU_FAIL, !ledState);
-                digitalWrite(LED_CDU_OFST, !ledState);    
-            }
-        else
-            {
-                ledState = HIGH;
-                digitalWrite(LED_CDU_MSG,  !ledState);
-                digitalWrite(LED_CDU_EXEC, ledState);// THIS GOES THROUGH A TRANSISTOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-                digitalWrite(LED_CDU_CALL, !ledState);
-                digitalWrite(LED_CDU_FAIL, !ledState);
-                digitalWrite(LED_CDU_OFST, !ledState);           
-            }
-
-        ledTime = millis();   
-
-        previous = !previous;
-        ledPrevious = !ledPrevious;
-
-}  // end of void TOGGLE_LEDS()
+//----- [checkEncoder()] ------- [checkEncoder()] ------- [checkEncoder()] ------- [checkEncoder()] -----//
 
 
 void checkEncoder()
 {
     // Read the current state of inputCLK
-    encoderCurrentStateCLK = digitalRead(EN_ROTA_Pin);
+        encoderCurrentStateCLK = digitalRead(EN_ROTA_Pin);
 
     // If the previous and the current state of the inputCLK are different then a pulse has occured
-    if (encoderCurrentStateCLK != encoderPreviousStateCLK) {
+        if (encoderCurrentStateCLK != encoderPreviousStateCLK) {
 
         // If the inputDT state is different than the inputCLK state then 
         // the encoder is rotating counterclockwise
@@ -845,6 +836,7 @@ void checkEncoder()
                 brightness = 0;
             }
             encdir = "CCW";
+            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
 
         }
         else {
@@ -856,16 +848,16 @@ void checkEncoder()
                 brightness = 255;
             }
             encdir = "CW";
-
+            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
         }
         // This is for debug purposes to see value from the rotary encoder to control the backlight LED brigtness
-        Serial.print("Direction: ");
-        Serial.print(encdir);
-        Serial.print(" -- Value: ");
-        Serial.println(brightness);
+            Serial.print("Direction: ");
+            Serial.print(encdir);
+            Serial.print(" -- Value: ");
+            Serial.println(brightness);
 
         // Write to the pin that controls the backlight LEDs in each pushbutton
-        analogWrite(BACK_LIGHT_PWM, brightness);
+            analogWrite(BACK_LIGHT_PWM, brightness);
 
     }
     // Update previousStateCLK with the current state
@@ -873,16 +865,40 @@ void checkEncoder()
 }
 
 
-//----- [LEDS_OFF()] ------- [LEDS_OFF()] ------- [LEDS_OFF()] ------- [LEDS_OFF()] -----//
+//----- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] -----//
 
 void ledsOff()
 {
     ledState = 0;
-    LED_Toggle = 0;
-
+   
     digitalWrite(LED_CDU_MSG, 1);
     digitalWrite(LED_CDU_EXEC, 0);        // EXEC LED via transistor
     digitalWrite(LED_CDU_CALL, 1);
     digitalWrite(LED_CDU_FAIL, 1);
     digitalWrite(LED_CDU_OFST, 1);
 }
+void ledBlink()
+{
+    // if the LED is off turn it on and vice-versa:
+    if (ledState == LOW)
+      ledState = HIGH;
+    else
+      ledState = LOW;
+
+    // set the LED with the ledState of the variable:
+    digitalWrite(LED_CDU_MSG, ledState);
+    digitalWrite(LED_CDU_EXEC, !ledState);        // EXEC LED via transistor
+    digitalWrite(LED_CDU_CALL, ledState);
+    digitalWrite(LED_CDU_FAIL, ledState);
+    digitalWrite(LED_CDU_OFST, ledState);
+}
+
+
+
+void lcdModeTimeOut()
+{
+    Serial.println("LCD Timer Timed Out");
+    ledFlag = 0;
+    ledsOff();
+    lcdTimer.stop();
+ }
