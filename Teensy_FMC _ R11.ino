@@ -632,7 +632,8 @@ void loop() {
 
         case (tap):
         {
-            Serial.println("single tap");
+            Serial.println("");  // Insert blank line before next print statement
+            Serial.println("Encoder Button Single Tap");
             lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
             break;
         } // end case (tap)
@@ -641,7 +642,8 @@ void loop() {
 
         case (doubleTap):
         {
-            Serial.println("double tap tap"); 
+            Serial.println("");  // Insert blank line before next print statement
+            Serial.println("Encoder Button Double tap"); 
             lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
             break;
         } // end case (doubleTap)
@@ -650,11 +652,12 @@ void loop() {
 
         case (hold):
         {
-            Serial.println("HOLD event detected");
+            Serial.println("");  // Insert blank line before next print statement
+            Serial.println("Encoder Button Held Down");
             ledFlag = 1;
-            Serial.println("Make the LEDs FLASH");
+            Serial.println("    - Make the LEDs FLASH");
             lcdTimer.start();
-            Serial.println("LCD TimeOut Timer Started");
+            Serial.println("    - LCD Mode Timer out Timer Started");
             break;
         } // end case (hold)
 
@@ -851,6 +854,7 @@ void checkEncoder()
             lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
         }
         // This is for debug purposes to see value from the rotary encoder to control the backlight LED brigtness
+            Serial.println("");  // Insert blank line before next print statement
             Serial.print("Direction: ");
             Serial.print(encdir);
             Serial.print(" -- Value: ");
@@ -864,7 +868,6 @@ void checkEncoder()
     encoderPreviousStateCLK = encoderCurrentStateCLK;
 }
 
-
 //----- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] -----//
 
 void ledsOff()
@@ -877,6 +880,9 @@ void ledsOff()
     digitalWrite(LED_CDU_FAIL, 1);
     digitalWrite(LED_CDU_OFST, 1);
 }
+
+//----- [ledsBlink()] ------- [ledsBlink()] ------- [ledsBlink()] ------- [ledsBlink()] -----//
+
 void ledBlink()
 {
     // if the LED is off turn it on and vice-versa:
@@ -894,10 +900,13 @@ void ledBlink()
 }
 
 
+//----- [lcdModeTimeOut()] ------- [lcdModeTimeOut()] ------- [lcdModeTimeOut()] ------- [lcdModeTimeOut()] -----//
+
 
 void lcdModeTimeOut()
 {
-    Serial.println("LCD Timer Timed Out");
+    Serial.println("");  // Insert blank line before next print statement
+    Serial.println("LCD Mode Timed Out");
     ledFlag = 0;
     ledsOff();
     lcdTimer.stop();
