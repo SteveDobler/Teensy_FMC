@@ -203,9 +203,12 @@ void LCDMode();
     const   byte COLS = 9;  // The CDU Keypad has 9 COL Wires
 
 
+// CodeIn variable hold the number from the keypad when a button is pressed
     char  CodeIn;
+
     int   OFF = 1;          // For the 5 FMC LEDs
     int   ON = 0;           // For the 5 FMC LEDs 
+
     int Encoder_Switch_State;
 
 //------- [Button Instance] -------- [Button Instance] --------- [Button Instance] --------- [Button Instance] --------//
@@ -343,9 +346,31 @@ matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
     // Teensy Code DIP Code Switch #2 Socket  Pin Number    41
         const int CODE_SELECT_SW_3 = 41;
 
-    // Teensy LCD S/Auto Output Button to LCD Pin Name:     PB6
+
+
+    // Teensy LCD Power Output Button to LCD Pin Name:      ___
+    // Teensy LCD Power Output Button Socket  Pin Number:  21
+        const int LCD_Power = 21;
+
+    // Teensy LCD Menu Output Button to LCD Pin Name:       OK
+    // Teensy LCD Menu Output Button Socket  Pin Number:    8
+        const int LCD_Menu = 8;
+
+    // Teensy LCD Plus Output Button to LCD Pin Name:       ___
+    // Teensy LCD Plus Output Button Socket  Pin Number:    21
+        const int LCD_Plus = 9;
+
+    // Teensy LCD Minus Output Button to LCD Pin Name:      ___
+    // Teensy LCD Minus Output Button Socket  Pin Number:   21
+        const int LCD_Minus = 25;
+
+    // Teensy LCD S/Auto Output Button to LCD Pin Name:     ___
     // Teensy LCD S/Auto Output Button Socket  Pin Number:  25
-        const int LCD_Menu = 25;
+        const int LCD_S_AUTO = 7;
+
+    // Teensy Piezo Buzzer for Keypad "click" Pin Name:     ___
+    // Teensy Piezo Buzzer for Keypad "click" Pin Number:   44
+        const int BUZZER = 44;
             
 // Brightness of the backlighted pushbuttons can range from 0 to 255. Adjust as desired
         int brightness = 50;
@@ -358,33 +383,51 @@ matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
         String encdir = "";
 
 // There are 4 DIP switches used to define various functions
-        int DIP_SW_1 = 1;     // KeyCap Name 
-        int DIP_SW_2 = 1;     // Keypad Number    
-        int DIP_SW_3 = 1;     // Aerosoft FSUIPC Value
-        int DIP_SW_4 = 1;     // Select FMC Pilot or Copilot
+        int DIP_SW_1;     // KeyCap Name 
+        int DIP_SW_2;     // Keypad Number    
+        int DIP_SW_3;     // Aerosoft FSUIPC Value
+        int DIP_SW_4;     // Select FMC Pilot or Copilot
 
 
 //----- [setup] ------- [setup] ------- [setup] ------- [setup] ------- [setup] ------- [setup]-----//
 
 void setup()
 {
+
     // Start serial Port 9600 baud rate
         Serial.begin(9600);
 
     // Configure the 5 LED pins as Output
-        pinMode(LED_CDU_MSG, OUTPUT);
+        pinMode(LED_CDU_MSG,  OUTPUT);
         pinMode(LED_CDU_EXEC, OUTPUT);
         pinMode(LED_CDU_CALL, OUTPUT);
         pinMode(LED_CDU_FAIL, OUTPUT);
         pinMode(LED_CDU_OFST, OUTPUT);
-
+   
     // Set the 5 LEDs to a known state (OFF)
-        digitalWrite(LED_CDU_MSG, OFF);
+        digitalWrite(LED_CDU_MSG,  OFF);
         digitalWrite(LED_CDU_EXEC, ON); // THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
         digitalWrite(LED_CDU_CALL, OFF);
         digitalWrite(LED_CDU_FAIL, OFF);
         digitalWrite(LED_CDU_OFST, OFF);
 
+    // Configure the 5 pins that control the LCD Drive Board as outputs
+        pinMode(LCD_Power, OUTPUT);
+        pinMode(LCD_Menu, OUTPUT);
+        pinMode(LCD_Plus, OUTPUT);
+        pinMode(LCD_Minus, OUTPUT);
+        pinMode(LCD_S_AUTO, OUTPUT);
+
+    // Set the 5 pins that control the LCD Drive Board (The base of 2N2222 transistors turning them off)
+        digitalWrite(LCD_Power,  0);
+        digitalWrite(LCD_Menu,   0);
+        digitalWrite(LCD_Plus,   0);
+        digitalWrite(LCD_Minus,  0);
+        digitalWrite(LCD_S_AUTO, 0);
+
+    // Configure the pin to the piezo buuzzer as output
+        pinMode(BUZZER, OUTPUT);
+       
     // Pins used for the 3 DIP switches used to select the code sent to the serial port when keys are pressed
         pinMode(CODE_SELECT_SW_1, INPUT_PULLUP);
         pinMode(CODE_SELECT_SW_2, INPUT_PULLUP);
@@ -421,6 +464,7 @@ void setup()
     // debounce time if necessary.
         encoderButton.debounceTime(15); //apply 15ms debounce
 
+
     // The double-tap detection window is set to 150ms by default.  Decreasing this value will result in
     // more responsive single-tap events, but requires really fast tapping to trigger a double-tap event.
     // Increasing this value will allow slower taps to still trigger a double-tap event, but will make
@@ -438,11 +482,10 @@ void setup()
     // initialize the arduino serial port and send a welcome message
         Serial.begin(9600);
         
-       
-        lcdTimer.setCounter(0, 0, 10, lcdTimer.COUNT_DOWN, lcdModeTimeOut);
-       
+    // This timer is used when in the LCD mode. if there is no activity on the encoder it will 
+    // time out and go back to the FMC mode automatically
+        lcdTimer.setCounter(0, 0, 11, lcdTimer.COUNT_DOWN, lcdModeTimeOut);  // set the timer for 15 seconds
    
-
 } // end of setup()
 
 /*In the matrix layout the follwoing items are shown :
@@ -541,7 +584,6 @@ void loop() {
                 LEDtime.fupdate();  //will check if set time has past and if so will run set function
             }
 
-
     // Read Code DIP Switches that are used to control various functions on the FMC
     /*     
             
@@ -569,6 +611,8 @@ void loop() {
     if (key != NO_KEY)
     {
         Serial.println("");  // Insert blank line before next print statement
+
+        keypadClick();
 
         if (DIP_SW_1 == 0)
         {
@@ -632,9 +676,12 @@ void loop() {
 
         case (tap):
         {
+            keypadClick();
+            lcdMenuButton();
             Serial.println("");  // Insert blank line before next print statement
-            Serial.println("Encoder Button Single Tap");
+            Serial.println("Encoder Button Single Tap");           
             lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
+          
             break;
         } // end case (tap)
 
@@ -642,9 +689,13 @@ void loop() {
 
         case (doubleTap):
         {
+            lcdSAutoButton();
             Serial.println("");  // Insert blank line before next print statement
             Serial.println("Encoder Button Double tap"); 
+            
             lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
+           
+
             break;
         } // end case (doubleTap)
 
@@ -654,6 +705,8 @@ void loop() {
         {
             Serial.println("");  // Insert blank line before next print statement
             Serial.println("Encoder Button Held Down");
+            keypadClick();
+            lcdMenuButton();
             ledFlag = 1;
             Serial.println("    - Make the LEDs FLASH");
             lcdTimer.start();
@@ -828,11 +881,11 @@ void checkEncoder()
 
     // If the previous and the current state of the inputCLK are different then a pulse has occured
         if (encoderCurrentStateCLK != encoderPreviousStateCLK) {
-
+   
         // If the inputDT state is different than the inputCLK state then 
         // the encoder is rotating counterclockwise
         if (digitalRead(EN_ROTB_Pin) != encoderCurrentStateCLK) {
-
+            lcdPlusButton();
             brightness = brightness - 10;
             if (brightness < 0)
             {
@@ -844,7 +897,7 @@ void checkEncoder()
         }
         else {
             // Encoder is rotating clockwise
-
+            lcdMinusButton();
             brightness = brightness + 5;
             if (brightness > 255)
             {
@@ -907,7 +960,49 @@ void lcdModeTimeOut()
 {
     Serial.println("");  // Insert blank line before next print statement
     Serial.println("LCD Mode Timed Out");
+    keypadClick();
     ledFlag = 0;
     ledsOff();
     lcdTimer.stop();
  }
+
+void keypadClick()
+{
+    tone(BUZZER, 750, 30);
+}
+
+void lcdPowerButton()
+{
+    digitalWrite(LCD_Power, 1);
+    
+    delay(50);
+    digitalWrite(LCD_Power, 0);
+}
+void lcdMenuButton()
+{
+    digitalWrite(LCD_Menu, 1);
+    Serial.println("Menu Button Pressed");
+    delay(100);
+    digitalWrite(LCD_Menu, 0);
+}
+
+void lcdPlusButton()
+{
+    digitalWrite(LCD_Plus, 1);
+    delay(100);
+    digitalWrite(LCD_Plus, 0);
+}
+
+void lcdMinusButton()
+{
+    digitalWrite(LCD_Minus, 1);
+    delay(100);
+    digitalWrite(LCD_Minus, 0);
+}
+
+void lcdSAutoButton()
+{
+    digitalWrite(LCD_S_AUTO, 1);
+    delay(100);
+    digitalWrite(LCD_S_AUTO, 0);
+}
