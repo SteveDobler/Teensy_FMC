@@ -7,8 +7,7 @@
 /*
 To be used with the design at this location: https://easyeda.com/SteveDobler/fmc_hispapanel
 
-
-CDU physical layout of keypad
+                                   [ CDU physical layout of keypad ]
          _______________________________________________________________________________________
         |                                                                                       |
         |            _______________________________________________________________            |
@@ -59,7 +58,7 @@ CDU physical layout of keypad
         |          [SW58]   [SW59]   [SW60]  [SW53]   [SW54]   [SW55]   [SW56]  [SW57]          |
         |_______________________________________________________________________________________|
 
-keypad.h library keypad array layou. These are the array's rows and columns, not the keypad's physical layout
+keypad.h library keypad array layouT. These are the array's rows and columns, not the keypad's physical layout
 
       { (R,C)...................................(R,C)} R=Row, C=Column
       { (1,1)(1,2)(1,3)(1,4)(1,5)(1,6)(1,7)(1,8)(1,9)}
@@ -79,18 +78,18 @@ keypad.h library keypad array layou. These are the array's rows and columns, not
 
                           ____________________________
                          |         |  USB  |          |
-                    GND  | 1       |       |       40 | +5V
-            PWM  PB7 27  | 2       |_______|       39 | 26  PB6  PWM
-       PWM INT0  PD0  0  | 3                       38 | 25  PB5  PWM
-       PWM INT1  PD1  1  | 4                       37 | 24  PB4  PWM
-        RX INT2  PD2  2  | 5                       36 | 23  PB3
-        TX INT3  PD3  3  | 6                       35 | 22  PB2
-                 PD4  4  | 7                       34 | 21  PB1
-                 PD5  5  | 8     Teensy++ 2.0      33 | 20  PB0
-       (LED PIN) PD6  6  | 9                       32 | 19  PE7
-                 PD7  7  | 10                      31 | 18  PE6
-                 PE0  8  | 11                      30 | GND
-                 PE1  9  | 12                      29 | AREF
+                     GND | 1       |       |       40 | +5V
+            PWM  PB7  27 | 2       |_______|       39 | 26  PB6  PWM
+       PWM INT0  PD0   0 | 3                       38 | 25  PB5  PWM
+       PWM INT1  PD1   1 | 4                       37 | 24  PB4  PWM
+        RX INT2  PD2   2 | 5                       36 | 23  PB3
+        TX INT3  PD3   3 | 6                       35 | 22  PB2
+                 PD4   4 | 7                       34 | 21  PB1
+                 PD5   5 | 8     Teensy++ 2.0      33 | 20  PB0
+       (LED PIN) PD6   6 | 9                       32 | 19  PE7
+                 PD7   7 | 10                      31 | 18  PE6
+                 PE0   8 | 11                      30 | GND
+                 PE1   9 | 12                      29 | AREF
                  PC0  10 | 13                      28 | 38  PF0  A0
                  PC1  11 | 14  PA4 32 O  O 28 PA0  27 | 39  PF1  A1
                  PC2  12 | 15  PA5 33 O  O 28 PA1  26 | 40  PF2  A2
@@ -106,77 +105,113 @@ keypad.h library keypad array layou. These are the array's rows and columns, not
 */
 
 /*
+  This view shows the schematic signal names for each pin on the Teensy++ 2.0 Module.  N/C = No Connection
 
-Programming the LCD - This is a new branch
+                          ____________________________
+                         |         |  USB  |          |
+                     GND | 1       |       |       40 | +5V
+                      R2 | 2       |_______|       39 | DIM_CTRL
+                      R3 | 3                       38 | LCD_PLUS
+                      R4 | 4                       37 | C1
+                      R5 | 5                       36 | C2
+                      R6 | 6                       35 | C3
+                      R7 | 7                       34 | LCD_PWR
+                      R8 | 8     Teensy++ 2.0      33 | C4
+                      R1 | 9                       32 | C5
+                LCD_AUTO | 10                      31 | C6
+                LCD_MENU | 11                      30 | GND
+                LCD_PLUS | 12                      29 | N/C
+                      SW | 13                      28 | C7
+                    ROTA | 14                      27 | C8
+                    ROTB | 15                      26 | DS_1
+                 LED_MSG | 16                      25 | DS_2
+                LED_EXEC | 17                      24 | DS_3
+                LED_CALL | 18                      23 | C9
+                LED_FAIL | 19                      22 | BUZZER
+                LED_OFST | 20                      21 | N/C
+                         | __________________________ |
+                                                                   
+*/
 
-    Power Button Function   Output - Teensy Pin ___
-    Menu Button FUnction    Output - Teensy Pin ___
-    + Button Function       Output - Teensy Pin ___
-    - Buton Function        Output - Teensy Pin ___
-    S/Auto Button Function  Output - Teensy Pin ___
+/*
 
-    •	Power Button	Encoder button press & hold 10 seconds (Powers LCD ON and OFF)
-    •	Power Button	Encoder button press & hold 5 seconds (LCD Mode – Flash all LEDs  ON & OFF)
-    •	Menu Button 	Encoder Button Press
-    •	+ Button	    Encoder rotate right
-    •	- Button	    Encoder rotate left
-    •	S/auto Button	EXEC button
+Programming the LCD Display
 
+    This FMC has the capability of adjusting settings on the LCD display using the encoder 
+    push button and clockwise and counter clockwise rotation of the encoder.
 
+    To enter the LCD settings mode, press and hold the encoder pushbutton for about 3 seconds.
+    After 3 seconds the all the LEDs will start to flash indicating that you are in the LCD 
+    settings mode.  In addition, the LCD settings menu will be displayed.  Once this menu
+    is displayed you can use the encoder to mimics the physical pressing of the LCD disply
+    controller board buttons.  Below are the equivalent of those buttons.  
+
+    Note: If none of the below actions are taken the flashing LEDs will time out and the 
+    unit will go back into the FMC mode.
+
+        Menu     Press encoder push button
+        (+) 	 Encoder rotate right
+        (-)  	 Encoder rotate left
+        S/Auto 	 Press the encoder push button twice quickly
+        Power    Once in the LCD setting mode press and hold 
 */
 
 //--------- [Functions Descriptions] ----------- [Functions Descriptions] ----------- [Functions Descriptions] -------//
 
-void LCDMode();
+void lcdPowerButton();  // Turns off the LCD display's power
 
-// checkEncoder()   Used to check the rotary encoder to control the backlight tactile button's LED brightness
-    void checkEncoder();    
+void lcdMenuButton();   // Mimics pressing the LCD Menu button
 
-// ledsOff()        Used to turn off the MSG, EXEC, CALL, FAIL and OFST LEDs 
-    void ledsOff();
+void lcdPlusButton();   // Mimics pressing the LCD (+) button
 
+void lcdMinusButton();   // Mimics pressing the LCD (-) button
 
-/* lessThan()       When a < character is present in the string read from the serial it indicates that the next 
-                    character is to be used to turn off a particular LED. After the < character the next character
-                    defines the LED as follows:
-                        M = MSG  LED
-                        E = EXEC LED
-                        C = CALL LED
-                        F = FAIL LED
-                        O = OFST LED
-*/
-    void lessThan();
-    
-/* moreThan()       When a > character is present in the string read from the serial it indicates that the next
-                    character is to be used to turn off a particular LED. After the > character the next character
-                    defines the LED as follows:
-                        M = MSG  LED
-                        E = EXEC LED
-                        C = CALL LED
-                        F = FAIL LED
-                        O = OFST LED
-*/  
-    void moreThan();
+void lcdSAutoButton();   // Mimics pressing the LCD S/Auto button
 
-//----- [Libraries] ------- [Libraries] ------- [Libraries] ------- [Libraries] -----//
+void keypadClick();     // Generates a "click" each time a keypad button is pressed.  Also used when LCD mode times out
 
-// Library for the keypad matrix
-    #include <Keypad.h>  // used for the FMC keypad matrix
+void checkEncoder();    // Used to check the rotary encoder to control the backlight tactile button's LED brightness
+   
+void ledsOff();         // Used to turn off the MSG, EXEC, CALL, FAIL and OFST LEDs     
+
+void ledBlink();        // Used to flash all the LEDs indicating the LCD Setting mode 
+
+void lcdModeTimeOut();  // Once in the LCD Setting mode, this is used to time out that mode if there is no activity
+
+void lessThan();        /* lessThan()   When a < character is present in the string read from the serial it 
+                           indicates that the next character is to be used to turn off a particular LED. 
+                           After the < character the next character defines the LED as follows:
+                                 M = MSG  LED
+                                 E = EXEC LED
+                                 C = CALL LED
+                                 F = FAIL LED
+                                 O = OFST LED
+                                 Z = All LEDs On
+                        */
   
-    #include "Countimer.h"  // timer library used for the LCD timeout
+void moreThan();        /* When a > character is present in the string read from the serial it indicates that
+                           the next character is to be used to turn off a particular LED. After the > character
+                           the next character defines the LED as follows:
+                                M = MSG  LED
+                                E = EXEC LED
+                                C = CALL LED
+                                F = FAIL LED
+                                O = OFST LED
+                                X = All LEDs Off
+                        */  
 
-    Countimer lcdTimer;  // Instance of timer used for LCD timeout
+//----- [Libraries] ------- [Libraries] ------- [Libraries] ------- [Libraries] ------- [Libraries] -----//
+  
+    #include <Keypad.h>     // used for the FMC keypad matrix
+  
+    #include "Countimer.h"              // timer library used for the LCD timeout
+    Countimer lcdTimer;                 // Instance of timer used for LCD timeout
 
-// NoDelay Library https://github.com/M-tech-Creations/NoDelay
-// used for detecting encoder push button, tap, double tap and hold events
-    #include <NoDelay.h>
-
-    void ledBlink();//Must declare function before noDelay 
-
-    noDelay LEDtime(200, ledBlink);//Creats a noDelay varible set to 1000ms, will call ledBlink function
-    int ledState = LOW;
-      
-
+    #include <NoDelay.h>                // NoDelay Library https://github.com/M-tech-Creations/NoDelay
+                                        // Used for detecting encoder push button, tap, double tap and hold events
+    noDelay LEDtime(200, ledBlink);    // Creates a noDelay varible set to 1000ms, will call ledBlink function
+    
+ 
 /*
   ButtonEvents - An Arduino library for catching tap, double-tap and press-and-hold events for buttons.
 
@@ -190,7 +225,7 @@ void LCDMode();
 
 
 //--- [Variable Assignments] --- [Variable Assignments] --- [Variable Assignments] --- [Variable Assignments] ----//
-
+    int ledState = LOW;
 
 // Variables used to blink the MSG, EXEC, CALL, FAIL and OFST LEDs to show the FMC is in LCD control state
     long BLINK_INTERVAL = 200;        // Interval at which to blink LED (milliseconds)
@@ -220,7 +255,19 @@ void LCDMode();
 */
     ButtonEvents encoderButton;    
 
+//-------- [Keypad ROWS & COL pin Assignments] ------- [Keypad ROWS & COL pin Assignments] ----------//
 
+// Teensy Programming ROW Number:         R1, R2, R3, R4, R5, R6, R7, R8
+// Teensy Programming ROW Pin Names:      D6, B7, D0, D1, D2, D3, D4, D5
+// Teensy Socket ROW Pin Names:           9,  2,  3,  4,  5,  6,  7,  8
+                byte rowPins[ROWS] =    { 6,  27, 0,  1,  2,  3,  4,  5 };      // Teensy pin programming numbers
+
+// Teensy Programming COL Number:         C1, C2, C3, C4, C5, C6, C7, C8, C9
+// Teensy Programming COL Pin Names:      B4, B3, B2, B0, E7, E6, F0, F1, F5    
+// Teensy Socket COL Number:              37, 36, 35, 33, 32, 31, 28, 27, 23
+                byte colPins[COLS] =    { 24, 23, 22, 20, 19, 18, 38, 39, 43 }; // Teensy pin programming numbers
+
+                
 // Using the keypad.h library the FMC switch matrix is populated from 1 to 69 and includes all keypad buttons
 
 byte keys[ROWS][COLS] = {
@@ -264,21 +311,121 @@ byte keys[ROWS][COLS] = {
 /* The  designation [ **** ] means there is no key switch in that position, however, 222 (arbitrary number) is placed in the
 matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
 */
+    
+
+String KeyName[] = {
+
+    /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
+                      |         |          |           |         |        |        |        |        |
+         Switch-> [ SW01  ]   [ SW09  ]  [  SW17 ] [  SW25   ] [ SW33 ] [ SW41 ] [ SW49 ] [ SW57 ] [ SW65 ]
+    ROW1 Name  -> [ LSK-1 ]   [ RSK-3 ]  [  DES  ] [   FIX   ] [   F  ] [  N   ] [  V   ] [ CLR  ] [   5  ] Row 0 */
+                  "[LSK-1]",  "[RSK-3]",  "[DES]",    "[FIX]",  "[ F ]", "[ N ]", "[ V ]", "[CLR]",  "[ 5 ]" , // Populate Array Row 1
+
+    /*   Switch-> [ SW02  ]   [ SW10   ]  [  SW18  ] [  SW26   ] [ SW34 ] [ SW42 ] [ SW50 ] [ SW58 ] [ SW66 ]
+    ROW2 Name  -> [ LSK-2 ]   [ RSK-4  ]  [  MENU  ] [PREV PAGE] [   G  ] [  O   ] [  W   ] [  .   ] [  6   ] Row 1  */
+                  "[LSK-2]",  "[RSK-4]",  "[MENU]", "[PREV PAGE]","[ G ]", "[ O ]", "[ W ]", "[ . ]",  "[ 6 ]", // Populate Array Row 2
+
+    /*   Switch-> [ SW03  ]   [ SW11   ]  [  SW19  ] [  SW27   ] [ SW35 ] [ SW43 ] [ SW51 ] [ SW59 ] [ SW67 ]
+    ROW3 Name  -> [ LSK-3 ]   [ RSK-5  ]  [  LEGS  ] [NEXT PAGE] [   H  ] [  P   ] [  X   ] [  0   ] [  1   ] Row 2  */
+                  "[LSK-3]",  "[RSK-5]",  "[LEGS]", "[NEXT PAGE]","[ H ]","[ P ]", "[ X ]", "[ 0 ]",  "[ 1 ]", // Populate Array Row 3
+
+    /*   Switch-> [ SW04  ]  [ SW12   ]   [  SW20  ]  [  SW28  ] [ SW36 ] [ SW44 ] [ SW52 ] [ SW60 ] [ SW68 ]
+    ROW4 Name  -> [ LSK-4 ]  [ RSK-6  ]   [DEP ARR ]  [   A    ] [  I   ] [  Q   ] [  Y   ] [ +/-  ] [  2   ] Row 3  */
+                 "[LSK-4]",  "[RSK-6]",  "[DEP ARR]",  "[ A ]",  "[ I ]", "[ Q ]", "[ Y ]", "[ +/- ]",  "[ 2 ]"  , // Populate Array Row 4
+
+    /*   Switch-> [ SW05  ]   [  SW13  ]  [  SW21  ] [  SW29   ] [ SW37 ] [ SW45 ] [ SW53 ] [ SW61 ] [ SW69 ]
+    ROW5 Name  -> [ LSK-5 ]   [INIT REF]  [  HOLD  ] [    B    ] [  J   ] [  R   ] [  Z   ] [  7   ] [  3   ] Row 4  */
+                  "[LSK-5]", "[INIT REF]","[HOLD]",    "[ B ]",  "[ J ]", "[ R ]", "[ Z ]", "[ 7 ]", "[ 3 ]"  , // Populate Array Row 5
+
+    /*   Switch-> [ SW06  ]  [  SW14  ]  [  SW22  ] [  SW30   ] [ SW38 ] [ SW46 ] [ SW54 ] [ SW62 ] [ **** ]
+    ROW6 Name  -> [ LSK-6 ]  [  RTE   ]  [  PROG  ] [    C    ] [  K   ] [  S   ] [  SP  ] [  8   ] [ **** ] Row 5  */
+                  "[LSK-6]",  "[RTE]",    "[PROG]",   "[ C ]",  "[ K ]", "[ S ]",  "[SP]", "[ 8 ]",  "[  ]", // Populate Array Row 6
+
+    /*   Switch-> [ SW07  ]  [  SW15  ] [  SW23  ] [  SW31   ] [ SW39 ] [ SW47 ] [ SW55 ] [ SW63 ] [ **** ]
+    ROW7 Name  -> [ RSK-1 ]  [  CLB   ] [  EXEC  ] [    D    ] [  L   ] [  T   ] [ DEL  ] [  9   ] [ **** ] Row 6  */
+                  "[RSK-1]",  "[CLB]",   "[EXEC]",   "[ D ]",  "[ L ]", "[ T ]", "[DEL]", "[ 9 ]",  "[  ]" , // Populate Array Row 7
+
+    /*   Switch-> [ SW08  ]  [ SW16   ] [  SW24  ] [  SW32   ] [ SW40 ] [ SW48 ] [ SW56 ] [ SW64 ] [ **** ]
+    ROW8 Name  -> [ RSK-2 ]  [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ] Row 7  */
+                  "[RSK-2]", "[CRZ]",  "[N1 LIMIT]", "[ E ]",  "[ M ]", "[ U ]", "[ / ]", "[ 4 ]",  "[  ]"  // Populate Array Row 8
+};
 
 
-//--------------- [ Teensy++ 2.0 Pin Assignments ] -------------------------- [ Teensy++ 2.0 Pin Assignments ] ------------//
+String AeroSoft[] = {
 
-//-------- [Keypad ROWS & COL pin Assignments] ------- [Keypad ROWS & COL pin Assignments] ----------//
+    /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
+                      |         |          |           |         |        |        |        |        |
+         Switch-> [ SW01  ] [ SW09   ] [  SW17  ] [  SW25   ] [ SW33 ] [ SW41 ] [ SW49 ] [ SW57 ] [ SW65 ]
+    ROW1 Name  -> [ LSK-1 ] [ RSK-3  ] [   DES  ] [   FIX   ] [   F  ] [  N   ] [  V   ] [ CLR  ] [   5  ] Row 0  */
+                     "1",      "9",       "204",     "211",     "70",     "78",   "86",   "101",    "53" , // Populate Array Row 1
 
-// Teensy Programming ROW Number:         R1, R2, R3, R4, R5, R6, R7, R8
-// Teensy Programming ROW Pin Names:      D6, B7, D0, D1, D2, D3, D4, D5
-// Teensy Socket ROW Pin Names:           9,  2,  3,  4,  5,  6,  7,  8
-                byte rowPins[ROWS] =    { 6,  27, 0,  1,  2,  3,  4,  5 };      // Teensy pin programming numbers
+    /*   Switch-> [ SW02  ] [ SW10   ] [  SW18  ] [  SW26   ] [ SW34 ] [ SW42 ] [ SW50 ] [ SW58 ] [ SW66 ]
+    ROW2 Name  -> [ LSK-2 ] [ RSK-4  ] [  MENU  ] [PREV PAGE] [   G  ] [  O   ] [  W   ] [  .   ] [  6   ] Row 1  */
+                     "2",     "10",       "205",     "212",     "71",    "79",    "87",    "46",    "54"  , // Populate Array Row 2
 
-// Teensy Programming COL Number:         C1, C2, C3, C4, C5, C6, C7, C8, C9
-// Teensy Programming COL Pin Names:      B4, B3, B2, B0, E7, E6, F0, F1, F5    
-// Teensy Socket COL Number:              37, 36, 35, 33, 32, 31, 28, 27, 23
-                byte colPins[COLS] =    { 24, 23, 22, 20, 19, 18, 38, 39, 43 }; // Teensy pin programming numbers
+    /*   Switch-> [ SW03  ] [ SW11   ] [  SW19  ] [  SW27   ] [ SW35 ] [ SW43 ] [ SW51 ] [ SW59 ] [ SW67 ]
+    ROW3 Name  -> [ LSK-3 ] [ RSK-5  ] [  LEGS  ] [NEXT PAGE] [   H  ] [  P   ] [  X   ] [  0   ] [  1   ] Row 2  */
+                     "3",     "11",       "206",     "213",     "72",    "80",    "88",     "48",   "49"  , // Populate Array Row 3
+
+    /*   Switch-> [ SW04  ] [ SW12   ] [  SW20  ] [  SW28   ] [ SW36 ] [ SW44 ] [ SW52 ] [ SW60 ] [ SW68 ]
+    ROW4 Name  -> [ LSK-4 ] [ RSK-6  ] [DEP ARR ] [    A    ] [   I  ] [  Q   ] [  Y   ] [ +/-  ] [  2   ] Row 3  */
+                     "4",     "12",      "207",      "65",      "73",    "81",    "89",   "100",    "50"  , // Populate Array Row 4
+
+    /*   Switch-> [ SW05  ] [ SW13   ] [  SW21  ] [  SW29   ] [ SW37 ] [ SW45 ] [ SW53 ] [ SW61 ] [ SW69 ]
+    ROW5 Name  -> [ LSK-5 ] [INIT REF] [  HOLD  ] [    B    ] [  J   ] [  R   ] [  Z   ] [  7   ] [  3   ] Row 4  */
+                     "5",     "200",      "208",      "66",     "74",    "82",    "90",    "55",    "51"  , // Populate Array Row 5
+
+    /*   Switch-> [ SW06  ] [ SW14   ] [  SW22  ] [  SW30   ] [ SW38 ] [ SW46 ] [ SW54 ] [ SW62 ] [ **** ]
+    ROW6 Name  -> [ LSK-6 ] [  RTE   ] [  PROG  ] [    C    ] [  K   ] [  S   ] [  SP  ] [  8   ] [ **** ] Row 5  */
+                     "6",     "201",      "209",      "67",     "75",    "83",    "32",    "56",    "222" , // Populate Array Row 6
+
+    /*   Switch-> [ SW07  ] [ SW15   ] [  SW23  ] [  SW31   ] [ SW39 ] [ SW47 ] [ SW55 ] [ SW63 ] [ **** ]
+    ROW7 Name  -> [ RSK-1 ] [  CLB   ] [  EXEC  ] [    D    ] [  L   ] [  T   ] [ DEL  ] [  9   ] [ **** ] Row 6  */
+                     "7",     "202",     "214",       "68",     "76",    "84",   "102",    "57",    "222" , // Populate Array Row 7
+
+    /*   Switch-> [ SW08  ] [ SW16   ] [  SW24  ] [  SW32   ] [ SW40 ] [ SW48 ] [ SW56 ] [ SW64 ] [ **** ]
+    ROW8 Name  -> [ RSK-2 ] [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ] Row 7  */
+                     "8",     "203",     "210",       "69",     "77",    "85",    "47",    "52",    "222"  // Populate Array Row 8
+};
+
+
+String PMDG[] = {
+
+    /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
+                      |         |          |           |         |        |        |        |        |
+         Switch-> [ SW01  ] [ SW09   ] [  SW17  ] [  SW25   ] [ SW33 ] [ SW41 ] [ SW49 ] [ SW57 ] [ SW65 ]
+    ROW1 Name  -> [ LSK-1 ] [ RSK-3  ] [   DES  ] [   FIX   ] [   F  ] [  N   ] [  V   ] [ CLR  ] [   5  ] Row 0  */
+                     "1",      "9",       "204",     "211",     "70",     "78",   "86",   "101",    "53" , // Populate Array Row 1
+
+    /*   Switch-> [ SW02  ] [ SW10   ] [  SW18  ] [  SW26   ] [ SW34 ] [ SW42 ] [ SW50 ] [ SW58 ] [ SW66 ]
+    ROW2 Name  -> [ LSK-2 ] [ RSK-4  ] [  MENU  ] [PREV PAGE] [   G  ] [  O   ] [  W   ] [  .   ] [  6   ] Row 1  */
+                     "2",     "10",       "205",     "212",     "71",    "79",    "87",    "46",    "54"  , // Populate Array Row 2
+
+    /*   Switch-> [ SW03  ] [ SW11   ] [  SW19  ] [  SW27   ] [ SW35 ] [ SW43 ] [ SW51 ] [ SW59 ] [ SW67 ]
+    ROW3 Name  -> [ LSK-3 ] [ RSK-5  ] [  LEGS  ] [NEXT PAGE] [   H  ] [  P   ] [  X   ] [  0   ] [  1   ] Row 2  */
+                     "3",     "11",       "206",     "213",     "72",    "80",    "88",     "48",   "49"  , // Populate Array Row 3
+
+    /*   Switch-> [ SW04  ] [ SW12   ] [  SW20  ] [  SW28   ] [ SW36 ] [ SW44 ] [ SW52 ] [ SW60 ] [ SW68 ]
+    ROW4 Name  -> [ LSK-4 ] [ RSK-6  ] [DEP ARR ] [    A    ] [   I  ] [  Q   ] [  Y   ] [ +/-  ] [  2   ] Row 3  */
+                     "4",     "12",      "207",      "65",      "73",    "81",    "89",   "100",    "50"  , // Populate Array Row 4
+
+    /*   Switch-> [ SW05  ] [ SW13   ] [  SW21  ] [  SW29   ] [ SW37 ] [ SW45 ] [ SW53 ] [ SW61 ] [ SW69 ]
+    ROW5 Name  -> [ LSK-5 ] [INIT REF] [  HOLD  ] [    B    ] [  J   ] [  R   ] [  Z   ] [  7   ] [  3   ] Row 4  */
+                     "5",     "200",      "208",      "66",     "74",    "82",    "90",    "55",    "51"  , // Populate Array Row 5
+
+    /*   Switch-> [ SW06  ] [ SW14   ] [  SW22  ] [  SW30   ] [ SW38 ] [ SW46 ] [ SW54 ] [ SW62 ] [ **** ]
+    ROW6 Name  -> [ LSK-6 ] [  RTE   ] [  PROG  ] [    C    ] [  K   ] [  S   ] [  SP  ] [  8   ] [ **** ] Row 5  */
+                     "6",     "201",      "209",      "67",     "75",    "83",    "32",    "56",    "222" , // Populate Array Row 6
+
+    /*   Switch-> [ SW07  ] [ SW15   ] [  SW23  ] [  SW31   ] [ SW39 ] [ SW47 ] [ SW55 ] [ SW63 ] [ **** ]
+    ROW7 Name  -> [ RSK-1 ] [  CLB   ] [  EXEC  ] [    D    ] [  L   ] [  T   ] [ DEL  ] [  9   ] [ **** ] Row 6  */
+                     "7",     "202",     "214",       "68",     "76",    "84",   "102",    "57",    "222" , // Populate Array Row 7
+
+    /*   Switch-> [ SW08  ] [ SW16   ] [  SW24  ] [  SW32   ] [ SW40 ] [ SW48 ] [ SW56 ] [ SW64 ] [ **** ]
+    ROW8 Name  -> [ RSK-2 ] [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ] Row 7  */
+                     "8",     "203",     "210",       "69",     "77",    "85",    "47",    "52",    "222"  // Populate Array Row 8
+};
+
 
 
 // Now that the row pins, column pins, number fo rows and number of columns have been defined, create the array
@@ -347,28 +494,27 @@ matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
         const int CODE_SELECT_SW_3 = 41;
 
 
-
-    // Teensy LCD Power Output Button to LCD Pin Name:      ___
-    // Teensy LCD Power Output Button Socket  Pin Number:  21
+    // Teensy LCD Power Output Button to LCD Pin Name:      B1
+    // Teensy LCD Power Output Button Socket  Pin Number:   21
         const int LCD_Power = 21;
 
-    // Teensy LCD Menu Output Button to LCD Pin Name:       OK
+    // Teensy LCD Menu Output Button to LCD Pin Name:       E0
     // Teensy LCD Menu Output Button Socket  Pin Number:    8
         const int LCD_Menu = 8;
 
-    // Teensy LCD Plus Output Button to LCD Pin Name:       ___
-    // Teensy LCD Plus Output Button Socket  Pin Number:    21
+    // Teensy LCD Plus Output Button to LCD Pin Name:       E1
+    // Teensy LCD Plus Output Button Socket  Pin Number:    9
         const int LCD_Plus = 9;
 
-    // Teensy LCD Minus Output Button to LCD Pin Name:      ___
-    // Teensy LCD Minus Output Button Socket  Pin Number:   21
+    // Teensy LCD Minus Output Button to LCD Pin Name:      B5
+    // Teensy LCD Minus Output Button Socket  Pin Number:   25
         const int LCD_Minus = 25;
 
-    // Teensy LCD S/Auto Output Button to LCD Pin Name:     ___
-    // Teensy LCD S/Auto Output Button Socket  Pin Number:  25
+    // Teensy LCD S/Auto Output Button to LCD Pin Name:     D7
+    // Teensy LCD S/Auto Output Button Socket  Pin Number:  7
         const int LCD_S_AUTO = 7;
 
-    // Teensy Piezo Buzzer for Keypad "click" Pin Name:     ___
+    // Teensy Piezo Buzzer for Keypad "click" Pin Name:     F6
     // Teensy Piezo Buzzer for Keypad "click" Pin Number:   44
         const int BUZZER = 44;
             
@@ -393,7 +539,6 @@ matrix as a placeholder.  The keypad.h library doesn't like zeros in the matrix.
 
 void setup()
 {
-
     // Start serial Port 9600 baud rate
         Serial.begin(9600);
 
@@ -454,7 +599,7 @@ void setup()
 
     // If your button is connected such that pressing it generates a high signal on the pin, you need to
     // specify that it is "active high"
-        encoderButton.activeHigh();
+       // encoderButton.activeHigh();  is this needed?
 
     // If your button is connected such that pressing it generates a low signal on the pin, you can specify
     // that it is "active low", or don't bother, since this is the default setting anyway.
@@ -463,7 +608,6 @@ void setup()
     // By default, the raw signal on the input pin has a 35ms debounce applied to it.  You can change the
     // debounce time if necessary.
         encoderButton.debounceTime(15); //apply 15ms debounce
-
 
     // The double-tap detection window is set to 150ms by default.  Decreasing this value will result in
     // more responsive single-tap events, but requires really fast tapping to trigger a double-tap event.
@@ -490,89 +634,11 @@ void setup()
 
 /*In the matrix layout the follwoing items are shown :
 
--Switch Number
-    - See keyboard schematic
-- Key Name
-    - This is the legend engraved on the plastic keycap
-- Value
-    - The number that will be returned by the keypad.h library when the key is pressed.
-    - This is for the AeroSorft Avionics Software http ://www.aerosoft.com.au/aerosoft_australia/home.html
-
+-Switch Number  - See keyboard schematic
+- Key Name      - This is the legend engraved on the plastic keycap
+- Value         - The number that will be returned by the keypad.h library when the key is pressed.
+                - This is for the AeroSorft Avionics Software  https://aerosoft.com.au/aerosoft_australia/home.html
 */
-
-String AeroSoft[] = {
-
-    /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
-                      |         |          |           |         |        |        |        |        |
-         Switch-> [ SW01  ] [ SW09   ] [  SW17  ] [  SW25   ] [ SW33 ] [ SW41 ] [ SW49 ] [ SW57 ] [ SW65 ]
-    ROW1 Name  -> [ LSK-1 ] [ RSK-3  ] [   DES  ] [   FIX   ] [   F  ] [  N   ] [  V   ] [ CLR  ] [   5  ] Row 0  */
-                     "1",      "9",       "204",     "211",     "70",     "78",   "86",   "101",    "53" , // Populate Array Row 1
-
-    /*   Switch-> [ SW02  ] [ SW10   ] [  SW18  ] [  SW26   ] [ SW34 ] [ SW42 ] [ SW50 ] [ SW58 ] [ SW66 ]
-    ROW2 Name  -> [ LSK-2 ] [ RSK-4  ] [  MENU  ] [PREV PAGE] [   G  ] [  O   ] [  W   ] [  .   ] [  6   ] Row 1  */
-                     "2",     "10",       "205",     "212",     "71",    "79",    "87",    "46",    "54"  , // Populate Array Row 2
-
-    /*   Switch-> [ SW03  ] [ SW11   ] [  SW19  ] [  SW27   ] [ SW35 ] [ SW43 ] [ SW51 ] [ SW59 ] [ SW67 ]
-    ROW3 Name  -> [ LSK-3 ] [ RSK-5  ] [  LEGS  ] [NEXT PAGE] [   H  ] [  P   ] [  X   ] [  0   ] [  1   ] Row 2  */
-                     "3",     "11",       "206",     "213",     "72",    "80",    "88",     "48",   "49"  , // Populate Array Row 3
-
-    /*   Switch-> [ SW04  ] [ SW12   ] [  SW20  ] [  SW28   ] [ SW36 ] [ SW44 ] [ SW52 ] [ SW60 ] [ SW68 ]
-    ROW4 Name  -> [ LSK-4 ] [ RSK-6  ] [DEP ARR ] [    A    ] [   I  ] [  Q   ] [  Y   ] [ +/-  ] [  2   ] Row 3  */
-                     "4",     "12",      "207",      "65",      "73",    "81",    "89",   "100",    "50"  , // Populate Array Row 4
-
-    /*   Switch-> [ SW05  ] [ SW13   ] [  SW21  ] [  SW29   ] [ SW37 ] [ SW45 ] [ SW53 ] [ SW61 ] [ SW69 ]
-    ROW5 Name  -> [ LSK-5 ] [INIT REF] [  HOLD  ] [    B    ] [  J   ] [  R   ] [  Z   ] [  7   ] [  3   ] Row 4  */
-                     "5",     "200",      "208",      "66",     "74",    "82",    "90",    "55",    "51"  , // Populate Array Row 5
-
-    /*   Switch-> [ SW06  ] [ SW14   ] [  SW22  ] [  SW30   ] [ SW38 ] [ SW46 ] [ SW54 ] [ SW62 ] [ **** ]
-    ROW6 Name  -> [ LSK-6 ] [  RTE   ] [  PROG  ] [    C    ] [  K   ] [  S   ] [  SP  ] [  8   ] [ **** ] Row 5  */
-                     "6",     "201",      "209",      "67",     "75",    "83",    "32",    "56",    "222" , // Populate Array Row 6
-
-    /*   Switch-> [ SW07  ] [ SW15   ] [  SW23  ] [  SW31   ] [ SW39 ] [ SW47 ] [ SW55 ] [ SW63 ] [ **** ]
-    ROW7 Name  -> [ RSK-1 ] [  CLB   ] [  EXEC  ] [    D    ] [  L   ] [  T   ] [ DEL  ] [  9   ] [ **** ] Row 6  */
-                     "7",     "202",     "214",       "68",     "76",    "84",   "102",    "57",    "222" , // Populate Array Row 7
-
-    /*   Switch-> [ SW08  ] [ SW16   ] [  SW24  ] [  SW32   ] [ SW40 ] [ SW48 ] [ SW56 ] [ SW64 ] [ **** ]
-    ROW8 Name  -> [ RSK-2 ] [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ] Row 7  */
-                     "8",     "203",     "210",       "69",     "77",    "85",    "47",    "52",    "222"  // Populate Array Row 8
-};
-
-String KeyName[] = {
-
-    /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
-                      |         |          |           |         |        |        |        |        |
-         Switch-> [ SW01  ]   [ SW09  ]  [  SW17 ] [  SW25   ] [ SW33 ] [ SW41 ] [ SW49 ] [ SW57 ] [ SW65 ]
-    ROW1 Name  -> [ LSK-1 ]   [ RSK-3 ]  [  DES  ] [   FIX   ] [   F  ] [  N   ] [  V   ] [ CLR  ] [   5  ] Row 0 */
-                  "[LSK-1]",  "[RSK-3]",  "[DES]",    "[FIX]",  "[ F ]", "[ N ]", "[ V ]", "[CLR]",  "[ 5 ]" , // Populate Array Row 1
-
-    /*   Switch-> [ SW02  ]   [ SW10   ]  [  SW18  ] [  SW26   ] [ SW34 ] [ SW42 ] [ SW50 ] [ SW58 ] [ SW66 ]
-    ROW2 Name  -> [ LSK-2 ]   [ RSK-4  ]  [  MENU  ] [PREV PAGE] [   G  ] [  O   ] [  W   ] [  .   ] [  6   ] Row 1  */
-                  "[LSK-2]",  "[RSK-4]",  "[MENU]", "[PREV PAGE]","[ G ]", "[ O ]", "[ W ]", "[ . ]",  "[ 6 ]", // Populate Array Row 2
-
-    /*   Switch-> [ SW03  ]   [ SW11   ]  [  SW19  ] [  SW27   ] [ SW35 ] [ SW43 ] [ SW51 ] [ SW59 ] [ SW67 ]
-    ROW3 Name  -> [ LSK-3 ]   [ RSK-5  ]  [  LEGS  ] [NEXT PAGE] [   H  ] [  P   ] [  X   ] [  0   ] [  1   ] Row 2  */
-                  "[LSK-3]",  "[RSK-5]",  "[LEGS]", "[NEXT PAGE]","[ H ]","[ P ]", "[ X ]", "[ 0 ]",  "[ 1 ]", // Populate Array Row 3
-
-    /*   Switch-> [ SW04  ]  [ SW12   ]   [  SW20  ]  [  SW28  ] [ SW36 ] [ SW44 ] [ SW52 ] [ SW60 ] [ SW68 ]
-    ROW4 Name  -> [ LSK-4 ]  [ RSK-6  ]   [DEP ARR ]  [   A    ] [  I   ] [  Q   ] [  Y   ] [ +/-  ] [  2   ] Row 3  */
-                 "[LSK-4]",  "[RSK-6]",  "[DEP ARR]",  "[ A ]",  "[ I ]", "[ Q ]", "[ Y ]", "[ +/- ]",  "[ 2 ]"  , // Populate Array Row 4
-
-    /*   Switch-> [ SW05  ]   [  SW13  ]  [  SW21  ] [  SW29   ] [ SW37 ] [ SW45 ] [ SW53 ] [ SW61 ] [ SW69 ]
-    ROW5 Name  -> [ LSK-5 ]   [INIT REF]  [  HOLD  ] [    B    ] [  J   ] [  R   ] [  Z   ] [  7   ] [  3   ] Row 4  */
-                  "[LSK-5]", "[INIT REF]","[HOLD]",    "[ B ]",  "[ J ]", "[ R ]", "[ Z ]", "[ 7 ]", "[ 3 ]"  , // Populate Array Row 5
-
-    /*   Switch-> [ SW06  ]  [  SW14  ]  [  SW22  ] [  SW30   ] [ SW38 ] [ SW46 ] [ SW54 ] [ SW62 ] [ **** ]
-    ROW6 Name  -> [ LSK-6 ]  [  RTE   ]  [  PROG  ] [    C    ] [  K   ] [  S   ] [  SP  ] [  8   ] [ **** ] Row 5  */
-                  "[LSK-6]",  "[RTE]",    "[PROG]",   "[ C ]",  "[ K ]", "[ S ]",  "[SP]", "[ 8 ]",  "[  ]", // Populate Array Row 6
-
-    /*   Switch-> [ SW07  ]  [  SW15  ] [  SW23  ] [  SW31   ] [ SW39 ] [ SW47 ] [ SW55 ] [ SW63 ] [ **** ]
-    ROW7 Name  -> [ RSK-1 ]  [  CLB   ] [  EXEC  ] [    D    ] [  L   ] [  T   ] [ DEL  ] [  9   ] [ **** ] Row 6  */
-                  "[RSK-1]",  "[CLB]",   "[EXEC]",   "[ D ]",  "[ L ]", "[ T ]", "[DEL]", "[ 9 ]",  "[  ]" , // Populate Array Row 7
-
-    /*   Switch-> [ SW08  ]  [ SW16   ] [  SW24  ] [  SW32   ] [ SW40 ] [ SW48 ] [ SW56 ] [ SW64 ] [ **** ]
-    ROW8 Name  -> [ RSK-2 ]  [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ] Row 7  */
-                  "[RSK-2]", "[CRZ]",  "[N1 LIMIT]", "[ E ]",  "[ M ]", "[ U ]", "[ / ]", "[ 4 ]",  "[  ]"  // Populate Array Row 8
-};
 
 
 //----- [Loop] ------- [Loop] ------- [Loop] ------- [Loop] ------- [Loop] ------- [Loop]-----//
@@ -738,10 +804,8 @@ char getChar() //  The serial buffer routine to get a character
 
 //----- [lessThan()] ------- [lessThan()] ------- [lessThan()] ------- [lessThan()]-----//
 
-/* ------------------------------ Subroutine LESSTHAN ------------------------------
-
-When the flight simulator wants to control the LEDs via a .lua script it first sends
- a less than (<) character followed by a single character as shown below:
+/* When the flight simulator wants to control the LEDs via a .lua script it first sends
+   a less than (<) character followed by a single character as shown below:
 
     MSG  LED  = Capital Letter M
     EXEC LED  = Capital Letter E
@@ -754,59 +818,49 @@ void lessThan() // For turning LEDs "ON"
 {
     char CodeIn = getChar();  // get another character from serial port
 
-      // Look for MSG LED  on / off characters
+        if (CodeIn == 'M')  // found identifier for "M" for MSG LED
+            {
+                digitalWrite(LED_CDU_MSG, ON); // Turn on LED
+            }
 
-    if (CodeIn == 'M')  // found identifier for "M" for MSG LED
-    {
-        digitalWrite(LED_CDU_MSG, ON); // Turn on LED
-    }
+        if (CodeIn == 'E') // found identifier for "E" for EXEC LED
+            {
+                digitalWrite(LED_CDU_EXEC, OFF); // THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
+            }
 
-    // Look for EXEC LED on / off characters
+        if (CodeIn == 'C') // found identifier for "D" for CALL LED
+            {
+                digitalWrite(LED_CDU_CALL, ON); // Turn on LED
+            }
 
-    if (CodeIn == 'E') // found identifier for "E" for EXEC LED
-    {
-        digitalWrite(LED_CDU_EXEC, OFF); // THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-    }
+        if (CodeIn == 'F') // found identifier for "F" for FAIL LED
+            {
+                digitalWrite(LED_CDU_FAIL, ON); // Turn on LED
+            }
 
-    // Look for CALL LED on / off characters
-    if (CodeIn == 'C') // found identifier for "D" for CALL LED
-    {
-        digitalWrite(LED_CDU_CALL, ON); // Turn on LED
-    }
+        if (CodeIn == 'O') // found identifier for "O" for OFST LED
+            {
+                digitalWrite(LED_CDU_OFST, ON); // Turn Off LED
+            }
 
-    // Look for FAIL LED on / off characters
+        if (CodeIn == 'Z') // found identifier for "Z" to turn ON all LEDS
+            {
+                digitalWrite(LED_CDU_MSG, ON);
+                digitalWrite(LED_CDU_EXEC, OFF);// THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
+                digitalWrite(LED_CDU_CALL, ON);
+                digitalWrite(LED_CDU_FAIL, ON);
+                digitalWrite(LED_CDU_OFST, ON);
+            }
 
-    if (CodeIn == 'F') // found identifier for "F" for FAIL LED
-    {
-        digitalWrite(LED_CDU_FAIL, ON); // Turn on LED
-    }
-
-    // Look for OFST LED on / off characters
-
-    if (CodeIn == 'O') // found identifier for "O" for OFST LED
-    {
-        digitalWrite(LED_CDU_OFST, ON); // Turn Off LED
-    }
-
-    if (CodeIn == 'Z') // found identifier for "Z" to turn ON all LEDS
-    {
-        digitalWrite(LED_CDU_MSG, ON);
-        digitalWrite(LED_CDU_EXEC, OFF);// THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-        digitalWrite(LED_CDU_CALL, ON);
-        digitalWrite(LED_CDU_FAIL, ON);
-        digitalWrite(LED_CDU_OFST, ON);
-
-    }
-    ledState = HIGH; // Set this HIGH so next time the Rotary Encoder Switch is pressed it will turn all LEDs OFF
+         ledState = HIGH; // Set this HIGH so next time the Rotary Encoder Switch is pressed it will turn all LEDs OFF
 
 }  // end of void LESSTHAN() 
 
 
-//----- [moreThan()] ------- [moreThan()] ------- [moreThan()] ------- [moreThan()]-----//
+//----- [moreThan()] ------- [moreThan()] ------- [moreThan()] ------- [moreThan()] ------- [moreThan()]-----//
 
 /* 
-
-When the flight simulator wants to control the LEDs via a .lua script it first sends
+ When the flight simulator wants to control the LEDs via a .lua script it first sends
  a greater than (>) character followed by a single character as shown below:
 
     MSG  LED  = Capital Letter M
@@ -816,73 +870,61 @@ When the flight simulator wants to control the LEDs via a .lua script it first s
     OFST LED  = Capital Letter O
 */
 
-
 void moreThan()// For turning LEDs "OFF"
 {
-
     char CodeIn = getChar();  // get another character from serial port
 
-      // Look for MSG LED  on / off characters
+         if (CodeIn == 'M')  // found identifier for "M" for MSG LED
+            {
+                digitalWrite(LED_CDU_MSG, OFF); // Turn off LED
+            }
 
-    if (CodeIn == 'M')  // found identifier for "M" for MSG LED
-    {
-        digitalWrite(LED_CDU_MSG, OFF); // Turn off LED
-    }
+        if (CodeIn == 'E') // found identifier for "E" for EXEC LED
+            {
+                digitalWrite(LED_CDU_EXEC, ON); // THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
+            }
 
-    // Look for EXEC LED on / off characters
+        if (CodeIn == 'C') // found identifier for "C" for CALL LED
+            {
+                digitalWrite(LED_CDU_CALL, OFF); // Turn off LED
+            }
 
-    if (CodeIn == 'E') // found identifier for "E" for EXEC LED
-    {
-        digitalWrite(LED_CDU_EXEC, ON); // THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-    }
+        if (CodeIn == 'F') // found identifier for "F" for FAIL LED
+            {
+                digitalWrite(LED_CDU_FAIL, OFF); // Turn off LED
+            }
 
-    // Look for CALL LED on / off characters
-    if (CodeIn == 'C') // found identifier for "C" for CALL LED
-    {
-        digitalWrite(LED_CDU_CALL, OFF); // Turn off LED
-    }
+        if (CodeIn == 'O') // found identifier for "O" for OFST LED
+            {
+                digitalWrite(LED_CDU_OFST, OFF); // Turn Off LED
+            }
 
-    // Look for FAIL LED on / off characters
+        if (CodeIn == 'X') // found identifier for "X" to turn off all LEDS
+            {
+                digitalWrite(LED_CDU_MSG, OFF);
+                digitalWrite(LED_CDU_EXEC, ON);// THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
+                digitalWrite(LED_CDU_CALL, OFF);
+                digitalWrite(LED_CDU_FAIL, OFF);
+                digitalWrite(LED_CDU_OFST, OFF);
 
-    if (CodeIn == 'F') // found identifier for "F" for FAIL LED
-    {
-        digitalWrite(LED_CDU_FAIL, OFF); // Turn off LED
-    }
-
-    // Look for OFST LED on / off characters
-
-    if (CodeIn == 'O') // found identifier for "O" for OFST LED
-    {
-        digitalWrite(LED_CDU_OFST, OFF); // Turn Off LED
-    }
-
-    // Look for character to turn off ALL LEDS
-
-    if (CodeIn == 'X') // found identifier for "X" to turn off all LEDS
-    {
-        digitalWrite(LED_CDU_MSG, OFF);
-        digitalWrite(LED_CDU_EXEC, ON);// THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
-        digitalWrite(LED_CDU_CALL, OFF);
-        digitalWrite(LED_CDU_FAIL, OFF);
-        digitalWrite(LED_CDU_OFST, OFF);
-
-    }
-    ledState = LOW; // Set this LOW so next time the Rotary Encoder Switch is pressed it will turn all LEDs ON
+        }
+        
+        ledState = LOW; // Set this LOW so next time the Rotary Encoder Switch is pressed it will turn all LEDs ON
 
 }  // end of void MORETHAN()
 
+
 //----- [checkEncoder()] ------- [checkEncoder()] ------- [checkEncoder()] ------- [checkEncoder()] -----//
 
-
 void checkEncoder()
-{
-    // Read the current state of inputCLK
-        encoderCurrentStateCLK = digitalRead(EN_ROTA_Pin);
+    {
+        encoderCurrentStateCLK = digitalRead(EN_ROTA_Pin);  // Read the current state of inputCLK
 
-    // If the previous and the current state of the inputCLK are different then a pulse has occured
-        if (encoderCurrentStateCLK != encoderPreviousStateCLK) {
+        // If the previous and the current state of the inputCLK are different then a pulse has occured
+        if (encoderCurrentStateCLK != encoderPreviousStateCLK) 
+            {
    
-        // If the inputDT state is different than the inputCLK state then 
+            // If the inputDT state is different than the inputCLK state then 
         // the encoder is rotating counterclockwise
         if (digitalRead(EN_ROTB_Pin) != encoderCurrentStateCLK) {
             lcdPlusButton();
@@ -917,11 +959,11 @@ void checkEncoder()
             analogWrite(BACK_LIGHT_PWM, brightness);
 
     }
-    // Update previousStateCLK with the current state
-    encoderPreviousStateCLK = encoderCurrentStateCLK;
+        // Update previousStateCLK with the current state
+            encoderPreviousStateCLK = encoderCurrentStateCLK;
 }
 
-//----- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] -----//
+//----- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] ------- [ledsOff()] -----//
 
 void ledsOff()
 {
@@ -952,9 +994,7 @@ void ledBlink()
     digitalWrite(LED_CDU_OFST, ledState);
 }
 
-
 //----- [lcdModeTimeOut()] ------- [lcdModeTimeOut()] ------- [lcdModeTimeOut()] ------- [lcdModeTimeOut()] -----//
-
 
 void lcdModeTimeOut()
 {
@@ -965,6 +1005,8 @@ void lcdModeTimeOut()
     ledsOff();
     lcdTimer.stop();
  }
+
+//----- [keypadClick()] ------- [keypadClick()] ------- [keypadClick()] ------- [keypadClick()] -----//
 
 void keypadClick()
 {
