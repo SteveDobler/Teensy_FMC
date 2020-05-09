@@ -389,41 +389,41 @@ String AeroSoft[] = {
 };
 
 
-String PMDG[] = {
+String PMDG_LEFT[] = {
 
     /*               COL1      COL2       COL3       COL4       COL5     COL6     COL7     COL8     COL9
                       |         |          |           |         |        |        |        |        |
          Switch-> [ SW01  ] [ SW09   ] [  SW17  ] [  SW25   ] [ SW33 ] [ SW41 ] [ SW49 ] [ SW57 ] [ SW65 ]
-    ROW1 Name  -> [ LSK-1 ] [ RSK-3  ] [   DES  ] [   FIX   ] [   F  ] [  N   ] [  V   ] [ CLR  ] [   5  ] Row 0  */
-                     "1",      "9",       "204",     "211",     "70",     "78",   "86",   "101",    "53" , // Populate Array Row 1
+    ROW1 Name  -> [ LSK-1 ] [ RSK-3  ] [   DES  ] [   FIX   ] [   F  ] [  N   ] [  V   ] [ CLR  ] [   5  ]  Row 0  */
+                   "70166",  "70174",   "70181",   "70190",    "70210", "70218", "70226", "70234", "70197", // Populate Array Row 1
 
     /*   Switch-> [ SW02  ] [ SW10   ] [  SW18  ] [  SW26   ] [ SW34 ] [ SW42 ] [ SW50 ] [ SW58 ] [ SW66 ]
-    ROW2 Name  -> [ LSK-2 ] [ RSK-4  ] [  MENU  ] [PREV PAGE] [   G  ] [  O   ] [  W   ] [  .   ] [  6   ] Row 1  */
-                     "2",     "10",       "205",     "212",     "71",    "79",    "87",    "46",    "54"  , // Populate Array Row 2
+    ROW2 Name  -> [ LSK-2 ] [ RSK-4  ] [  MENU  ] [PREV PAGE] [   G  ] [  O   ] [  W   ] [  .   ] [  6   ]  Row 1  */
+                   "70167",  "70175",    "70183",  "70192",    "70211", "70219", "70227", "70202", "70197", // Populate Array Row 2
 
     /*   Switch-> [ SW03  ] [ SW11   ] [  SW19  ] [  SW27   ] [ SW35 ] [ SW43 ] [ SW51 ] [ SW59 ] [ SW67 ]
-    ROW3 Name  -> [ LSK-3 ] [ RSK-5  ] [  LEGS  ] [NEXT PAGE] [   H  ] [  P   ] [  X   ] [  0   ] [  1   ] Row 2  */
-                     "3",     "11",       "206",     "213",     "72",    "80",    "88",     "48",   "49"  , // Populate Array Row 3
+    ROW3 Name  -> [ LSK-3 ] [ RSK-5  ] [  LEGS  ] [NEXT PAGE] [   H  ] [  P   ] [  X   ] [  0   ] [  1   ]  Row 2  */
+                   "70168",  "70176",   "70184"    "70192",    "70212", "70220", "70228", "70203", "70193", // Populate Array Row 3
 
     /*   Switch-> [ SW04  ] [ SW12   ] [  SW20  ] [  SW28   ] [ SW36 ] [ SW44 ] [ SW52 ] [ SW60 ] [ SW68 ]
-    ROW4 Name  -> [ LSK-4 ] [ RSK-6  ] [DEP ARR ] [    A    ] [   I  ] [  Q   ] [  Y   ] [ +/-  ] [  2   ] Row 3  */
-                     "4",     "12",      "207",      "65",      "73",    "81",    "89",   "100",    "50"  , // Populate Array Row 4
+    ROW4 Name  -> [ LSK-4 ] [ RSK-6  ] [DEP ARR ] [    A    ] [   I  ] [  Q   ] [  Y   ] [ +/-  ] [  2   ]  Row 3  */
+                   "70169",  "70177",   "70181",   "70205",    "70213", "70221", "70229", "70204", "70194", // Populate Array Row 4
 
     /*   Switch-> [ SW05  ] [ SW13   ] [  SW21  ] [  SW29   ] [ SW37 ] [ SW45 ] [ SW53 ] [ SW61 ] [ SW69 ]
-    ROW5 Name  -> [ LSK-5 ] [INIT REF] [  HOLD  ] [    B    ] [  J   ] [  R   ] [  Z   ] [  7   ] [  3   ] Row 4  */
-                     "5",     "200",      "208",      "66",     "74",    "82",    "90",    "55",    "51"  , // Populate Array Row 5
+    ROW5 Name  -> [ LSK-5 ] [INIT REF] [  HOLD  ] [    B    ] [  J   ] [  R   ] [  Z   ] [  7   ] [  3   ]  Row 4  */
+                   "70170",  "70178",   "70186",   "70206",    "70214", "70222", "70230", "70199", "70195", // Populate Array Row 5
 
     /*   Switch-> [ SW06  ] [ SW14   ] [  SW22  ] [  SW30   ] [ SW38 ] [ SW46 ] [ SW54 ] [ SW62 ] [ **** ]
-    ROW6 Name  -> [ LSK-6 ] [  RTE   ] [  PROG  ] [    C    ] [  K   ] [  S   ] [  SP  ] [  8   ] [ **** ] Row 5  */
-                     "6",     "201",      "209",      "67",     "75",    "83",    "32",    "56",    "222" , // Populate Array Row 6
+    ROW6 Name  -> [ LSK-6 ] [  RTE   ] [  PROG  ] [    C    ] [  K   ] [  S   ] [  SP  ] [  8   ] [ **** ]  Row 5  */
+                   "70171",  "70178",   "70187",   "70207",    "70215", "70223", "70231", "70200",  "222",  // Populate Array Row 6
 
     /*   Switch-> [ SW07  ] [ SW15   ] [  SW23  ] [  SW31   ] [ SW39 ] [ SW47 ] [ SW55 ] [ SW63 ] [ **** ]
-    ROW7 Name  -> [ RSK-1 ] [  CLB   ] [  EXEC  ] [    D    ] [  L   ] [  T   ] [ DEL  ] [  9   ] [ **** ] Row 6  */
-                     "7",     "202",     "214",       "68",     "76",    "84",   "102",    "57",    "222" , // Populate Array Row 7
+    ROW7 Name  -> [ RSK-1 ] [  CLB   ] [  EXEC  ] [    D    ] [  L   ] [  T   ] [ DEL  ] [  9   ] [ **** ]  Row 6  */
+                   "70172",  "70180",   "70188",   "70208",    "70216", "70224", "70232", "70201",  "222",  // Populate Array Row 7
 
     /*   Switch-> [ SW08  ] [ SW16   ] [  SW24  ] [  SW32   ] [ SW40 ] [ SW48 ] [ SW56 ] [ SW64 ] [ **** ]
-    ROW8 Name  -> [ RSK-2 ] [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ] Row 7  */
-                     "8",     "203",     "210",       "69",     "77",    "85",    "47",    "52",    "222"  // Populate Array Row 8
+    ROW8 Name  -> [ RSK-2 ] [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ]  Row 7  */
+                   "70173",  "70181",     "210",   "70209",    "70217", "70225", "70233", "70196",  "222"   // Populate Array Row 8
 };
 
 
@@ -699,6 +699,9 @@ void loop() {
             key = key - 1;  // The KeyName and Aerosoft arrays start at "0"
             Serial.print("AeroSoft Key Value:       ");
             Serial.println(AeroSoft[key]);
+
+            Serial.print("PMDG Left Value:         ");
+            Serial.println(PMDG_LEFT[key]);
         }           
     }
 
@@ -1048,3 +1051,175 @@ void lcdSAutoButton()
     delay(100);
     digitalWrite(LCD_S_AUTO, 0);
 }
+
+
+/* What follows is the .lau code that is used with the AeroSoft Avionics
+
+--AeroSoft_CDU_R6.lua
+
+
+-- Instructions To Launch the script:
+-- * Place this file in the Modules folder of your sim with the other FSUIPC files
+-- * Have the COM port of the Arduino handy you will need to enter it on first launch
+-- * In FSX go to Add-ons
+-- * Select FSUIPC
+-- * Select Buttons and Switches Tab
+-- * Press a button on your joystick to assign a launch button
+-- * Tick the "Select for FS control" box
+-- * In the drop down "Control sent when button is pressed"
+-- * Scroll down and select "Lua Tutorial 001 A"
+-- * NOTE: NOT LuaClear, LuaSet, LuaDebug
+-- * You can set another button for "LuaKill Tutorial 001 A"
+-- * Hit OK.
+-- * Back in the sim, press the Joystick button that you assigned
+-- * Enter the COM port when requested.
+-- * Afterward it should remember the COM port on future launches
+
+------------------------------------------------------------------
+---- Variables ---------------------------------------------------
+------------------------------------------------------------------
+port_file = "CDU_Arduino_Port_Number.txt"
+speed = 115200
+handshake = 0
+serial_wait = 1000
+
+----End of Variables section -------------------------------------
+
+------------------------------------------------------------------
+---- Com Port set up and recording.  AKA the Magic section -------
+------------------------------------------------------------------
+-- Not going to go into this section other than to tell you it will
+-- prompt you for the Arduino com port and record it in a text file
+-- that it places in the Modules folder.
+
+file = io.open(port_file, "r")
+if file == nil then
+    port_number = "10"
+    file = io.open(port_file, "w")
+    io.output(file)
+    io.write(port_number)
+    io.close(file)
+    Arduino_Com_Port = com.open("COM"..port_number, speed, handshake)
+else
+    port_number = file:read (2)
+    --ipc.display(port_number)
+    io.close(file)
+    Arduino_Com_Port = com.open("COM"..port_number, speed, handshake)
+end
+if Arduino_Com_Port ~= 0 then
+    ipc.display("Arduino Com Port "..port_number.." Open",5)
+
+else
+    ipc.display("Could not open ARDUINO Com Port")
+    ipc.sleep(2000)
+    port_number = ipc.ask('\n'..'\n'..'\n'..'\n'..'\n'..'\n'..'\n'..'\n'.." Enter the Arduino Com Port for Your RADIO")
+    file = io.open(port_file, "w")
+    io.output(file)
+    io.write(port_number)
+    io.close(file)
+
+    Arduino_Com_Port = com.open("COM"..port_number, speed, handshake)
+
+    if Arduino_Com_Port == 0 then
+        ipc.display("Could not open ARDUINO Com Port",5)
+
+        ipc.exit()
+    else
+        ipc.display("Arduino Com Port "..port_number.." Open",5)
+
+    end
+end
+---- End of Magic section ----------------------------------------
+
+
+------------------------------------------------------------------
+---- Functions ---------------------------------------------------
+------------------------------------------------------------------
+
+-- Only one function in this script.
+-- When data comes in from the Arduino, it gets sent to this
+-- function.  When it finds one of the strings in "" it does that
+-- ipc.control.
+
+--Handle = com.open(4, 115200) -- for LED detecting
+
+function Arduino_Data(Arduino_Com_Port, datastring, length)
+
+--The Arduino sends the number corresponding to the key pressed.
+
+ --   ipc.display("CDU 4 Arduino button pressed  "..datastring.."  ",1)
+
+        ipc.writeSW(0x07371, datastring)
+        ipc.writeSB(0x07370, 0xFA)
+
+end  -- function end
+
+-- Parking Brake Function
+
+
+function pkgbrake(offset, value)
+
+  if value == 0 then -- Brake Off
+      com.write(Arduino_Com_Port, "<O\r")  -- Currently this test turns the Arduino EXEC LED OFF
+
+    else -- Brake ON value is 32767
+      com.write(Arduino_Com_Port, "<L\r")  -- Currently this test turns the Arduino EXEC LED ON
+
+    end
+end
+
+--This script is to read the AeroSoft CDU MGS LED and display it on the screen
+
+function CDU_MSG_LED(offset, value)
+
+  --ipc.display("CDU_MSG_LED Function Event Triggered",5)
+    serial_wait = 1000
+    MSG_LED = ipc.readUW(0x7378) -- read parking brake
+
+
+if MSG_LED == 0x0004 then
+    com.write(Arduino_Com_Port, "<L\r")  -- Currently this test turns the Arduino EXEC LED ON
+    --ipc.display("MGS LED is ON!!!",5)
+    serial_wait = 1000
+end -- End of if MSG_LED ON
+
+
+
+if MSG_LED == 0x0000 then
+    com.write(Arduino_Com_Port, "<O\r")  -- Currently this test turns the Arduino EXEC LED OFF
+    --ipc.display("MGS LED is OFF!!",5)
+    serial_wait = 1000
+end -- End of if MSG_LED OFF
+
+
+end -- End of CDU_MSG_LED function
+
+--ipc.sleep(serial_wait)
+
+
+---- End of Functions section -----------------------
+
+
+-----------------------------------------------------
+---- Events -----------------------------------------
+-----------------------------------------------------
+-- Events are awesome. They dont require a continuous loop to work.
+-- They just sit back and wait for a trigger and then spring into action.
+-- Events must go at the bottom of the script. Why? Google it.
+
+event.com(Arduino_Com_Port, 5,1, "Arduino_Data")
+    -- This is event.com, it listens for data on the Arduinos Com port.
+    -- The 5 and 1 are the max and min characters accepted
+    -- The data is then passed to the "Arduino_Data" function above.
+
+event.offset(0x0BC8, "UW", "pkgbrake")
+
+
+event.offset(0x7378, "UW", "CDU_MSG_LED")
+
+---- End of Events section --------------------------
+
+
+
+
+*/
