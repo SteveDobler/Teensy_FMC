@@ -4,6 +4,32 @@
   Author:     Steven Dobler
 */
 
+/* Overview
+    This is a program for a B737 FMC (Flight Management Computer) / CDU (Control Display Unit).  The 
+    processor used in this design is a Teensy++ 2.0 due to the Arduino code compatibility and the number
+    of I/O pins needed for this design.
+
+    There a several features that this design has including:
+        - Circuity board designed to work with the Hispapanel B737 FMC bezel and buttons
+        - Designed for the 5" LCD ZJ050NA-08C
+        - Supports to Drive boards
+            - KYV-N5-V1     (Preferred due to on board power, VGA & HDMI connectors)
+            - GDN-D567AT    (Secondary due to power and VGA connectors on separate cables)
+        - Support for multiple Flight Simiulator Avionics Suites - selectable via on board DIP switches
+            - AeroSoft (only pilot supported)
+            - PMDG (selectable Pilot and Copilot)
+            - ProSim (selectable Pilot and Copilot)
+            - Diagnostics mode (Displays all values for each keys)
+        - Open source code with ability to modify values of keys for other / Future Avionics Suites
+        - Works with .lau scripts documented in comments at the end of this program
+        - Ability to control the 5" LCD settings using the Rotary Encoder
+        - All 69 pushbuttons are backlighted & brightness controlled by the Rotary Encoder
+        - Audibale "click" for keypad keys (selectable)
+        - EXEC LED pluggable into the circuit board
+        - All components silkscreen labeled with values and polarity
+        - Switches silkscreen with names of keys to help when populating plastic keycaps
+        - On board +12V connector to be used with "Y" cable to power the LEDs and the LCD Drive Board
+ */
 /*
 To be used with the design at this location: https://easyeda.com/SteveDobler/fmc_hispapanel
 
@@ -164,9 +190,9 @@ void lcdMenuButton();   // Mimics pressing the LCD Menu button
 
 void lcdPlusButton();   // Mimics pressing the LCD (+) button
 
-void lcdMinusButton();   // Mimics pressing the LCD (-) button
+void lcdMinusButton();  // Mimics pressing the LCD (-) button
 
-void lcdSAutoButton();   // Mimics pressing the LCD S/Auto button
+void lcdSAutoButton();  // Mimics pressing the LCD S/Auto button
 
 void keypadClick();     // Generates a "click" each time a keypad button is pressed.  Also used when LCD mode times out
 
@@ -226,9 +252,11 @@ void moreThan();        /* When a > character is present in the string read from
 
 //--- [Variable Assignments] --- [Variable Assignments] --- [Variable Assignments] --- [Variable Assignments] ----//
     int ledState = LOW;
+    int fmcState = HIGH; // start up mode is the normal FMC
+
 
 // Variables used to blink the MSG, EXEC, CALL, FAIL and OFST LEDs to show the FMC is in LCD control state
-    long BLINK_INTERVAL = 200;        // Interval at which to blink LED (milliseconds)
+    long BLINK_INTERVAL = 200;              // Interval at which to blink LED (milliseconds)
     unsigned long LEDpreviousMillis = 0;    // Will store last time LED was updated
     unsigned long LEDCurrentMillis = 0;
     int ledFlag = 0;
@@ -423,7 +451,7 @@ String PMDG_LEFT[] = {
 
     /*   Switch-> [ SW08  ] [ SW16   ] [  SW24  ] [  SW32   ] [ SW40 ] [ SW48 ] [ SW56 ] [ SW64 ] [ **** ]
     ROW8 Name  -> [ RSK-2 ] [  CRZ   ] [N1 LIMIT] [    E    ] [  M   ] [  U   ] [  /   ] [  4   ] [ **** ]  Row 7  */
-                   "70173",  "70181",     "210",   "70209",    "70217", "70225", "70233", "70196",  "222"   // Populate Array Row 8
+                   "70173",  "70181",   "70189",   "70209",    "70217", "70225", "70233", "70196",  "222"   // Populate Array Row 8
 };
 
 
@@ -634,10 +662,10 @@ void setup()
 
 /*In the matrix layout the follwoing items are shown :
 
--Switch Number  - See keyboard schematic
-- Key Name      - This is the legend engraved on the plastic keycap
-- Value         - The number that will be returned by the keypad.h library when the key is pressed.
-                - This is for the AeroSorft Avionics Software  https://aerosoft.com.au/aerosoft_australia/home.html
+Switch Number   See keyboard schematic
+Key Name        This is the legend engraved on the plastic keycap
+Value           The number that will be returned by the keypad.h library when the key is pressed.
+                This is for the AeroSorft Avionics Software  https://aerosoft.com.au/aerosoft_australia/home.html
 */
 
 
@@ -680,28 +708,34 @@ void loop() {
 
         keypadClick();
 
-        if (DIP_SW_1 == 0)
+        if (DIP_SW_1 == 0) // AeroSoft value only for .lau program running on FSX
+        {
+            key = key - 1;  // The KeyName and Aerosoft arrays start at "0"
+            Serial.println(AeroSoft[key]);
+        }
+
+        if (DIP_SW_2 == 0) // Debug - Print values from all arrays
         {
             key = key - 1;  // The KeyName and Aerosoft arrays start at "0"
             Serial.print("FMC Key Name:            ");
             Serial.println(KeyName[key]);
-        }
 
-        if (DIP_SW_2 == 0)
-        {
             key = key + 1;
             Serial.print("Keypad Array Number:   ");
             Serial.println(key);
-        }
 
-        if (DIP_SW_3 == 0)
-        {
             key = key - 1;  // The KeyName and Aerosoft arrays start at "0"
             Serial.print("AeroSoft Key Value:       ");
             Serial.println(AeroSoft[key]);
 
+            key = key - 1;
             Serial.print("PMDG Left Value:         ");
             Serial.println(PMDG_LEFT[key]);
+        }
+
+        if (DIP_SW_3 == 0)
+        {
+            
         }           
     }
 
@@ -725,7 +759,16 @@ void loop() {
 
 
   // Check for rotary encoder
+  
+    if (fmcState == HIGH)
+    {
         checkEncoder();
+    }
+    else
+    {
+        lcdControl();
+    }
+
 
   // The update() method returns true if an event or state change occurred.  It serves as a passthru
   // to the Bounce2 library update() function as well, so it will stll return true if a press/release
@@ -744,44 +787,44 @@ void loop() {
         //----- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] ------- [Encoder Button Single Tap] -------//
 
         case (tap):
-        {
-            keypadClick();
-            lcdMenuButton();
-            Serial.println("");  // Insert blank line before next print statement
-            Serial.println("Encoder Button Single Tap");           
-            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
-          
-            break;
-        } // end case (tap)
+            {
+                keypadClick();
+                if (fmcState == LOW)
+                {
+                    lcdMenuButton();
+                    Serial.println("");  // Insert blank line before next print statement
+                    Serial.println("Encoder Button Single Tap");
+                    lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
+                }
+                break;
+            } // end case (tap)
 
         //----- [Encoder Button Double Tap] ------- [Encoder Button Double Tap] ------- [Encoder Button Double Tap] -------//
 
         case (doubleTap):
-        {
-            lcdSAutoButton();
-            Serial.println("");  // Insert blank line before next print statement
-            Serial.println("Encoder Button Double tap"); 
-            
-            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
-           
-
-            break;
-        } // end case (doubleTap)
+            {
+                lcdSAutoButton();
+                Serial.println("");  // Insert blank line before next print statement
+                Serial.println("Encoder Button Double tap");             
+                lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
+                break;
+            } // end case (doubleTap)
 
     //----- [Encoder Button Hold] ----- [Encoder Button Hold] ------ [Encoder Button Hold] ----- [Encoder Button Hold] -----//
 
         case (hold):
-        {
-            Serial.println("");  // Insert blank line before next print statement
-            Serial.println("Encoder Button Held Down");
-            keypadClick();
-            lcdMenuButton();
-            ledFlag = 1;
-            Serial.println("    - Make the LEDs FLASH");
-            lcdTimer.start();
-            Serial.println("    - LCD Mode Timer out Timer Started");
-            break;
-        } // end case (hold)
+            {
+                Serial.println("");  // Insert blank line before next print statement
+                Serial.println("Encoder Button Held Down");
+                fmcState = LOW;           
+                keypadClick();
+                lcdMenuButton();
+                ledFlag = 1;
+                Serial.println("    - Make the LEDs FLASH");
+                lcdTimer.start();
+                Serial.println("    - LCD Mode Timer out Timer Started");
+                break;
+            } // end case (hold)
 
         default:
             break;
@@ -930,7 +973,6 @@ void checkEncoder()
             // If the inputDT state is different than the inputCLK state then 
         // the encoder is rotating counterclockwise
         if (digitalRead(EN_ROTB_Pin) != encoderCurrentStateCLK) {
-            lcdPlusButton();
             brightness = brightness - 10;
             if (brightness < 0)
             {
@@ -942,7 +984,6 @@ void checkEncoder()
         }
         else {
             // Encoder is rotating clockwise
-            lcdMinusButton();
             brightness = brightness + 5;
             if (brightness > 255)
             {
@@ -1007,23 +1048,23 @@ void lcdModeTimeOut()
     ledFlag = 0;
     ledsOff();
     lcdTimer.stop();
+    fmcState = HIGH;
  }
 
 //----- [keypadClick()] ------- [keypadClick()] ------- [keypadClick()] ------- [keypadClick()] -----//
 
-void keypadClick()
+void keypadClick()              // Used to make a sound when keypad buttons are pressed
 {
-    tone(BUZZER, 750, 30);
+    tone(BUZZER, 750, 30);  
 }
 
-void lcdPowerButton()
+void lcdPowerButton()           // Turns ON / OFF the 5" LCD Panel
 {
     digitalWrite(LCD_Power, 1);
-    
     delay(50);
     digitalWrite(LCD_Power, 0);
 }
-void lcdMenuButton()
+void lcdMenuButton()            // Displays LCD Menu on the 5" LCD Panel
 {
     digitalWrite(LCD_Menu, 1);
     Serial.println("Menu Button Pressed");
@@ -1031,21 +1072,21 @@ void lcdMenuButton()
     digitalWrite(LCD_Menu, 0);
 }
 
-void lcdPlusButton()
+void lcdPlusButton()            // Navigates DOWN the LCD Menu on the 5" LCD Panel
 {
     digitalWrite(LCD_Plus, 1);
     delay(100);
     digitalWrite(LCD_Plus, 0);
 }
 
-void lcdMinusButton()
+void lcdMinusButton()           // Navigates UP the LCD Menu on the 5" LCD Panel
 {
     digitalWrite(LCD_Minus, 1);
     delay(100);
     digitalWrite(LCD_Minus, 0);
 }
 
-void lcdSAutoButton()
+void lcdSAutoButton()           // Used to select video input or Menu BACK button on the 5" LCD Panel
 {
     digitalWrite(LCD_S_AUTO, 1);
     delay(100);
@@ -1053,173 +1094,31 @@ void lcdSAutoButton()
 }
 
 
-/* What follows is the .lau code that is used with the AeroSoft Avionics
 
---AeroSoft_CDU_R6.lua
+//----- [lcdControl()] ------- [lcdControl()] ------- [lcdControl()] ------- [lcdControl()] -----//
 
+void lcdControl()
+{
+    encoderCurrentStateCLK = digitalRead(EN_ROTA_Pin);  // Read the current state of inputCLK
 
--- Instructions To Launch the script:
--- * Place this file in the Modules folder of your sim with the other FSUIPC files
--- * Have the COM port of the Arduino handy you will need to enter it on first launch
--- * In FSX go to Add-ons
--- * Select FSUIPC
--- * Select Buttons and Switches Tab
--- * Press a button on your joystick to assign a launch button
--- * Tick the "Select for FS control" box
--- * In the drop down "Control sent when button is pressed"
--- * Scroll down and select "Lua Tutorial 001 A"
--- * NOTE: NOT LuaClear, LuaSet, LuaDebug
--- * You can set another button for "LuaKill Tutorial 001 A"
--- * Hit OK.
--- * Back in the sim, press the Joystick button that you assigned
--- * Enter the COM port when requested.
--- * Afterward it should remember the COM port on future launches
+    // If the previous and the current state of the inputCLK are different then a pulse has occured
+    if (encoderCurrentStateCLK != encoderPreviousStateCLK)
+    {
 
-------------------------------------------------------------------
----- Variables ---------------------------------------------------
-------------------------------------------------------------------
-port_file = "CDU_Arduino_Port_Number.txt"
-speed = 115200
-handshake = 0
-serial_wait = 1000
+    // If the inputDT state is different than the inputCLK state then 
+    // the encoder is rotating counterclockwise
+        if (digitalRead(EN_ROTB_Pin) != encoderCurrentStateCLK) {
+            lcdPlusButton();
+            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
 
-----End of Variables section -------------------------------------
-
-------------------------------------------------------------------
----- Com Port set up and recording.  AKA the Magic section -------
-------------------------------------------------------------------
--- Not going to go into this section other than to tell you it will
--- prompt you for the Arduino com port and record it in a text file
--- that it places in the Modules folder.
-
-file = io.open(port_file, "r")
-if file == nil then
-    port_number = "10"
-    file = io.open(port_file, "w")
-    io.output(file)
-    io.write(port_number)
-    io.close(file)
-    Arduino_Com_Port = com.open("COM"..port_number, speed, handshake)
-else
-    port_number = file:read (2)
-    --ipc.display(port_number)
-    io.close(file)
-    Arduino_Com_Port = com.open("COM"..port_number, speed, handshake)
-end
-if Arduino_Com_Port ~= 0 then
-    ipc.display("Arduino Com Port "..port_number.." Open",5)
-
-else
-    ipc.display("Could not open ARDUINO Com Port")
-    ipc.sleep(2000)
-    port_number = ipc.ask('\n'..'\n'..'\n'..'\n'..'\n'..'\n'..'\n'..'\n'.." Enter the Arduino Com Port for Your RADIO")
-    file = io.open(port_file, "w")
-    io.output(file)
-    io.write(port_number)
-    io.close(file)
-
-    Arduino_Com_Port = com.open("COM"..port_number, speed, handshake)
-
-    if Arduino_Com_Port == 0 then
-        ipc.display("Could not open ARDUINO Com Port",5)
-
-        ipc.exit()
-    else
-        ipc.display("Arduino Com Port "..port_number.." Open",5)
-
-    end
-end
----- End of Magic section ----------------------------------------
-
-
-------------------------------------------------------------------
----- Functions ---------------------------------------------------
-------------------------------------------------------------------
-
--- Only one function in this script.
--- When data comes in from the Arduino, it gets sent to this
--- function.  When it finds one of the strings in "" it does that
--- ipc.control.
-
---Handle = com.open(4, 115200) -- for LED detecting
-
-function Arduino_Data(Arduino_Com_Port, datastring, length)
-
---The Arduino sends the number corresponding to the key pressed.
-
- --   ipc.display("CDU 4 Arduino button pressed  "..datastring.."  ",1)
-
-        ipc.writeSW(0x07371, datastring)
-        ipc.writeSB(0x07370, 0xFA)
-
-end  -- function end
-
--- Parking Brake Function
-
-
-function pkgbrake(offset, value)
-
-  if value == 0 then -- Brake Off
-      com.write(Arduino_Com_Port, "<O\r")  -- Currently this test turns the Arduino EXEC LED OFF
-
-    else -- Brake ON value is 32767
-      com.write(Arduino_Com_Port, "<L\r")  -- Currently this test turns the Arduino EXEC LED ON
-
-    end
-end
-
---This script is to read the AeroSoft CDU MGS LED and display it on the screen
-
-function CDU_MSG_LED(offset, value)
-
-  --ipc.display("CDU_MSG_LED Function Event Triggered",5)
-    serial_wait = 1000
-    MSG_LED = ipc.readUW(0x7378) -- read parking brake
-
-
-if MSG_LED == 0x0004 then
-    com.write(Arduino_Com_Port, "<L\r")  -- Currently this test turns the Arduino EXEC LED ON
-    --ipc.display("MGS LED is ON!!!",5)
-    serial_wait = 1000
-end -- End of if MSG_LED ON
-
-
-
-if MSG_LED == 0x0000 then
-    com.write(Arduino_Com_Port, "<O\r")  -- Currently this test turns the Arduino EXEC LED OFF
-    --ipc.display("MGS LED is OFF!!",5)
-    serial_wait = 1000
-end -- End of if MSG_LED OFF
-
-
-end -- End of CDU_MSG_LED function
-
---ipc.sleep(serial_wait)
-
-
----- End of Functions section -----------------------
-
-
------------------------------------------------------
----- Events -----------------------------------------
------------------------------------------------------
--- Events are awesome. They dont require a continuous loop to work.
--- They just sit back and wait for a trigger and then spring into action.
--- Events must go at the bottom of the script. Why? Google it.
-
-event.com(Arduino_Com_Port, 5,1, "Arduino_Data")
-    -- This is event.com, it listens for data on the Arduinos Com port.
-    -- The 5 and 1 are the max and min characters accepted
-    -- The data is then passed to the "Arduino_Data" function above.
-
-event.offset(0x0BC8, "UW", "pkgbrake")
-
-
-event.offset(0x7378, "UW", "CDU_MSG_LED")
-
----- End of Events section --------------------------
-
-
-
-
-*/
+        }
+        else {
+            // Encoder is rotating clockwise
+            lcdMinusButton();
+            lcdTimer.restart(); // resets the blinking LCDs so the FMC doesn't timeout and go back to FMC mode
+        }
+       
+    }
+    // Update previousStateCLK with the current state
+        encoderPreviousStateCLK = encoderCurrentStateCLK;
+}
