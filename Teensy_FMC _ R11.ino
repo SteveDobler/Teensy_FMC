@@ -579,6 +579,11 @@ void loop() {
         {
             moreThan(); //Identifier character it ">" goto MORETHAN void
         }
+
+ if (CodeIn == '#')
+        {
+            lcdButtons(); //Identifier character it "#" goto lcdControl void
+        }
     } // end of if serial.available()
 
 
@@ -797,7 +802,7 @@ void checkEncoder()
             // If the inputDT state is different than the inputCLK state then 
         // the encoder is rotating counterclockwise
         if (digitalRead(EN_ROTB_Pin) != encoderCurrentStateCLK) {
-            brightness = brightness - 10;
+            brightness = brightness - 5;
             if (brightness < 0)
             {
                 brightness = 0;
@@ -956,3 +961,44 @@ void threeBeeps()              // Used to make a sound when keypad buttons are p
         delay(150);
     }
 }
+
+//----- [LcdButtons()] ------- [moreThan()] ------- [moreThan()] ------- [moreThan()] ------- [moreThan()]-----//
+
+
+
+void lcdButtons()// For controlling LCD setup - this mimics pushing the buttons on the LCD button board
+{
+    char CodeIn = getChar();  // get another character from serial port
+
+         if (CodeIn == 'P')  // found identifier for "M" for MSG LED
+            {
+                lcdPowerButton();
+            }
+
+        if (CodeIn == 'M') // found identifier for "E" for EXEC LED
+            {
+                lcdMenuButton();
+            }
+
+        if (CodeIn == '+') // found identifier for "C" for CALL LED
+            {
+                lcdPlusButton();
+            }
+
+        if (CodeIn == '-') // found identifier for "F" for FAIL LED
+            {
+                lcdMinusButton();
+            }
+
+        if (CodeIn == 'S') // found identifier for "O" for OFST LED
+            {
+                lcdSAutoButton();
+            }
+        if (CodeIn == 'B') // found identifier for "O" for OFST LED
+        {
+            ledBlink();
+        }
+        }
+        
+  
+
