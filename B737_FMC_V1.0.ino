@@ -528,7 +528,7 @@ void loop() {
 
     if (key != NO_KEY)
     {
-        Serial.println("");  // Insert blank line before next print statement
+        //Serial.println("");  // Insert blank line before next print statement
 
         keypadClick();
 
@@ -720,7 +720,7 @@ void lessThan() // For turning LEDs "ON"
 
         if (CodeIn == 'Z') // found identifier for "Z" to turn ON all LEDS
             {
-                digitalWrite(LED_CDU_MSG, ON);
+                digitalWrite(LED_CDU_MSG,  ON);
                 digitalWrite(LED_CDU_EXEC, OFF);// THIS GOES THROUGH A TRANSITOR TO DRIVE 2 LED SO THE ON / OFF IS REVERSED
                 digitalWrite(LED_CDU_CALL, ON);
                 digitalWrite(LED_CDU_FAIL, ON);
